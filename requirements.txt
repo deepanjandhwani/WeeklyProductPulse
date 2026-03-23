@@ -1,0 +1,29 @@
+# ── Core ──────────────────────────────────────────────────────────────────────
+google-play-scraper==1.2.7      # Play Store review scraping (no API key needed)
+pandas==2.2.3                   # DataFrame manipulation & CSV I/O
+python-dotenv==1.0.1            # Load .env API keys into environment
+
+# ── LLM Clients (Phase 2 & 3/4) ───────────────────────────────────────────────
+groq==0.11.0                    # Groq API client (Llama 3.3 70B — theme tagging)
+google-generativeai==0.8.3      # Gemini API client (Flash-Lite — report gen)
+
+# ── Fuzzy Matching (Phase 2 theme deduplication) ──────────────────────────────
+thefuzz==0.22.1                 # Fuzzy string matching for theme consolidation
+rapidfuzz==3.10.1               # Pre-built wheel; speeds up thefuzz on all Python versions
+
+# ── Google Docs (optional Phase 4 append) ─────────────────────────────────────
+google-api-python-client>=2.100.0
+google-auth>=2.23.0
+mcp>=1.0.0                         # MCP stdio client for Pipeline → MCP → Google Docs
+
+# ── Utilities ─────────────────────────────────────────────────────────────────
+tenacity==8.5.0                 # Retry logic with exponential backoff
+rich==13.9.4                    # Pretty console output for run summaries
+groq>=0.4.2
+google-generativeai>=0.8.0
+
+# ── Web dashboard + email (optional) ──────────────────────────────────────────
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+markdown>=3.5
+email-validator>=2.0.0          # Pydantic EmailStr for recipient validation

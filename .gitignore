@@ -1,0 +1,41 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# ── Virtual environments ───────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+
+# ── Secrets — NEVER commit these ──────────────────────────────────────────────
+.env
+
+# ── Data files — excluded from git (can be large) ────────────────────────────
+data/cache/
+data/consolidated/
+data/tagged/
+data/reports/
+
+# ── Log files ─────────────────────────────────────────────────────────────────
+logs/
+
+# ── macOS ────────────────────────────────────────────────────────────────────
+.DS_Store
+
+# ── IDEs ─────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+
+# ── pytest ────────────────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/

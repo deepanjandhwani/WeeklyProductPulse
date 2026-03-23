@@ -1,0 +1,28 @@
+{
+  "scenarios": [
+    {
+      "id": "exit_load_mf",
+      "category": "exit_load",
+      "title": "Mutual fund exit load",
+      "last_checked": "2026-03-22",
+      "bullets": [
+        "Exit load is a fee that may apply when an investor redeems units of a mutual fund scheme before a stated period from allotment, where the scheme’s offer document permits it.",
+        "SEBI-regulated mutual funds disclose exit load structure, if any, in the scheme information document and addendum; terms vary by scheme category and are not uniform across all funds.",
+        "Exit load, when charged, is typically a percentage of the applicable net asset value and is retained within the scheme for the benefit of remaining unit holders, as described in scheme documents.",
+        "Not all mutual fund schemes levy an exit load; index funds and some liquid schemes may specify nil exit load subject to the current offer document.",
+        "Investors can verify the applicable load for a specific scheme from the latest SID/KIM and factsheet published by the AMC.",
+        "Charges other than exit load (e.g. stamp duty, statutory levies) may apply as disclosed separately in scheme documents."
+      ],
+      "sources": [
+        {
+          "label": "SEBI — Investor corner (mutual funds)",
+          "url": "https://investor.sebi.gov.in/mutual-funds.html"
+        },
+        {
+          "label": "AMFI — Investor education",
+          "url": "https://www.amfiindia.com/investor-corner/knowledge-center.html"
+        }
+      ]
+    }
+  ]
+}

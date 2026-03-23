@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "google-docs": {
+      "command": "${workspaceFolder}/.cursor/google-docs-mcp.sh",
+      "args": []
+    }
+  }
+}

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Weekly Product Pulse</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/css/app.css?v=5" />
+</head>
+<body>
+  <div class="layout">
+    <header class="top">
+      <div class="brand">
+        <img class="brand-logo" src="/assets/images/indmoney-logo.png" alt="IndMoney logo" />
+        <div>
+          <p class="brand-kicker">IndMoney Customer Voice</p>
+          <h1>Weekly Product Pulse</h1>
+          <p class="tagline">IndMoney Play Store intelligence — rolling 12-week window</p>
+        </div>
+      </div>
+      <div class="actions">
+        <label class="field-label" for="week-select">Report week</label>
+        <select id="week-select" aria-label="Select report week"></select>
+        <button type="button" id="btn-refresh" class="btn secondary">Refresh</button>
+      </div>
+      <p class="window-note">
+        Each selected week is the window end week (that week + previous 11 weeks).
+      </p>
+    </header>
+
+    <aside class="meta" id="meta-panel">
+      <div class="meta-row">
+        <span class="label">Week</span>
+        <strong id="meta-week">—</strong>
+      </div>
+      <div class="meta-row">
+        <span class="label">Report</span>
+        <span id="meta-file">Weekly customer pulse</span>
+      </div>
+    </aside>
+
+    <section class="email-panel" aria-labelledby="email-panel-title">
+      <h2 id="email-panel-title" class="email-panel-title">Send full report by email</h2>
+      <p class="email-panel-hint">
+        Enter one or more addresses (comma, space, or newline). The <strong>entire</strong> pulse for the selected week
+        is sent in both plain text and rich email format.
+      </p>
+      <label for="email-recipients">Recipient email addresses</label>
+      <textarea
+        id="email-recipients"
+        rows="3"
+        autocomplete="email"
+        placeholder="lead@company.com, pm@company.com"
+        spellcheck="false"
+      ></textarea>
+      <details class="advanced-settings">
+        <summary>Advanced settings</summary>
+        <div class="email-panel-row">
+          <label for="api-token" class="label-optional">API token (only if your admin asked for it)</label>
+          <input type="password" id="api-token" autocomplete="off" placeholder="Optional token" />
+        </div>
+      </details>
+      <div class="email-panel-actions">
+        <button type="button" id="btn-email" class="btn primary">Send email</button>
+      </div>
+    </section>
+
+    <main class="content">
+      <div id="status" class="status hidden" role="status"></div>
+      <article id="report" class="report prose" aria-live="polite">
+        <p class="placeholder">Loading report…</p>
+      </article>
+    </main>
+
+    <footer class="foot">
+      <span>WeeklyProductPulse</span>
+      <span class="sep">·</span>
+      <span>IndMoney Customer Voice</span>
+    </footer>
+  </div>
+  <script src="/assets/js/app.js?v=4" type="module"></script>
+</body>
+</html>
