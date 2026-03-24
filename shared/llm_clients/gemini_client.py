@@ -22,7 +22,10 @@ logger = logging.getLogger("weekly_pulse")
 if config.GEMINI_API_KEY:
     genai.configure(api_key=config.GEMINI_API_KEY)
 else:
-    logger.error("GEMINI_API_KEY missing from .env!", extra={"phase": "llm_client"})
+    logger.warning(
+        "GEMINI_API_KEY not set (optional if PHASE3/PHASE4 use Groq only).",
+        extra={"phase": "llm_client"},
+    )
 
 @retry(
     retry=retry_if_exception_type(Exception),

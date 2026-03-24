@@ -18,12 +18,21 @@ import config
 
 logger = logging.getLogger("weekly_pulse")
 
-# Initialize the client. The groq library naturally reads the `GROQ_API_KEY` env var.
-try:
-    _client = Groq(api_key=config.GROQ_API_KEY)
-except Exception as e:
+# Initialize only when key is non-empty; empty key sends "Bearer " and httpx rejects it.
+_client: Groq | None
+if not config.GROQ_API_KEY:
     _client = None
-    logger.error(f"Failed to initialize Groq client: {e}", extra={"phase": "llm_client"})
+    logger.error(
+        "GROQ_API_KEY is empty. For GitHub Actions, add repository secret GROQ_API_KEY "
+        "(Settings → Secrets and variables → Actions).",
+        extra={"phase": "llm_client"},
+    )
+else:
+    try:
+        _client = Groq(api_key=config.GROQ_API_KEY)
+    except Exception as e:
+        _client = None
+        logger.error(f"Failed to initialize Groq client: {e}", extra={"phase": "llm_client"})
 
 @retry(
     retry=retry_if_exception_type(Exception),

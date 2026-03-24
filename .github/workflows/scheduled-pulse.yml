@@ -55,6 +55,17 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Verify required Action secrets (Groq)
+        shell: bash
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: |
+          if [[ -z "${GROQ_API_KEY// }" ]]; then
+            echo "::error::GROQ_API_KEY is missing or empty. Add it: Repo → Settings → Secrets and variables → Actions → New repository secret (name: GROQ_API_KEY)."
+            exit 1
+          fi
+          echo "GROQ_API_KEY is set (value not shown)."
+
       - name: Write Google Docs MCP OAuth token (optional)
         shell: bash
         env:

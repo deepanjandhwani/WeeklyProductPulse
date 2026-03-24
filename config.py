@@ -41,7 +41,7 @@ LLM_AUDIT_DIR    = LOGS_DIR / "llm_audit"       # LLM call audit .jsonl logs
 PROMPTS_DIR      = BASE_DIR / "prompts"
 
 # ── Phase 2: Theme Clustering ─────────────────────────────────────────────────
-GROQ_API_KEY     = os.getenv("GROQ_API_KEY", "")
+GROQ_API_KEY     = (os.getenv("GROQ_API_KEY") or "").strip()
 GROQ_MODEL       = "llama-3.3-70b-versatile"
 BATCH_SIZE       = 80                   # Reviews per Groq API call
 MAX_THEMES       = 5                    # Maximum distinct themes to surface
@@ -51,7 +51,7 @@ THEME_MERGE_MODE = os.getenv("THEME_MERGE_MODE", "llm").lower()
 THEME_MERGE_MAX_UNIQUE_TAGS = int(os.getenv("THEME_MERGE_MAX_UNIQUE_TAGS", "100"))
 
 # ── Phase 3 & 4: Insight + Report ─────────────────────────────────────────────
-GEMINI_API_KEY   = os.getenv("GEMINI_API_KEY", "")
+GEMINI_API_KEY   = (os.getenv("GEMINI_API_KEY") or "").strip()
 # Override in .env if a model hits quota, e.g. GEMINI_MODEL=gemini-2.0-flash-lite
 GEMINI_MODEL     = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
 TOP_THEMES       = 3                    # Number of top themes for the report
