@@ -69,23 +69,25 @@ async def _send_email_async(
                     f"No compatible email tool found on MCP server. Available: {[t.name for t in listed.tools]}"
                 )
 
-            # Include common argument aliases to maximize compatibility across MCP email servers.
+            # Prefer schema-compliant arguments for Gmail MCP and other strict servers.
             arguments = {
-                "to": to_email,
-                "to_email": to_email,
+                "to": [to_email],
                 "subject": subject,
                 "body": text_body,
-                "text": text_body,
-                "html": html_body,
+                "htmlBody": html_body,
+                "mimeType": "multipart/alternative",
             }
             result = await session.call_tool(picked_tool, arguments=arguments)
 
-            if getattr(result, "isError", False):
-                err_text = ""
-                for block in result.content or []:
-                    if getattr(block, "type", None) == "text":
-                        err_text += getattr(block, "text", "") or ""
-                raise RuntimeError(err_text or "MCP email tool returned isError")
+            response_text = ""
+            for block in result.content or []:
+                if getattr(block, "type", None) == "text":
+                    response_text += (getattr(block, "text", "") or "").strip()
+
+            # Some MCP servers return errors as text blocks with isError=False.
+            lowered = response_text.lower()
+            if getattr(result, "isError", False) or lowered.startswith("error:") or "invalid_type" in lowered:
+                raise RuntimeError(response_text or "MCP email tool returned an error response")
 
             logger.info(
                 "mcp_email_sent",

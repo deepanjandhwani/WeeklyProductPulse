@@ -3,7 +3,7 @@
 > **Product**: IndMoney Play Store Review Intelligence  
 > **Author**: Senior AI Product Manager  
 > **Date**: 24 March 2026  
-> **Version**: 1.3
+> **Version**: 1.4
 
 ---
 
@@ -11,7 +11,7 @@
 
 WeeklyProductPulse is an automated pipeline that scrapes recent IndMoney Play Store reviews from a configurable lookback window (default 12 weeks), clusters them into themes, and produces a concise, PII-free weekly intelligence note — complete with user quotes and actionable recommendations. The system uses **free-tier LLM options** (Groq Llama 3.3 70B by default; Gemini optional per phase via config/env) with chunking and caching controls for rate limits.
 
-**Distribution & operations (v1.3+):** Outputs can be pushed to **Google Docs** (REST API with a service account, or **OAuth + MCP** via `@a-bonus/google-docs-mcp` from Python or Cursor). A **FastAPI** dashboard (`web/main.py`) serves the latest pulse in the browser and can email participants via **SMTP (default)** or **MCP email transport** (`EMAIL_TRANSPORT=mcp`). **GitHub Actions** (`.github/workflows/scheduled-pulse.yml`) runs the full pipeline on a schedule; **`python -m scheduler`** is the same orchestration locally or in CI.
+**Distribution & operations (v1.4+):** Outputs can be pushed to **Google Docs** (REST API with a service account, or **OAuth + MCP** via `@a-bonus/google-docs-mcp` from Python or Cursor). A **FastAPI** dashboard (`web/main.py`) serves the latest pulse in the browser and can email participants via **SMTP (default)** or **MCP email transport** (`EMAIL_TRANSPORT=mcp`). MCP email now uses schema-compliant tool arguments and treats MCP text error payloads as hard failures (no silent "success"). **GitHub Actions** (`.github/workflows/scheduled-pulse.yml`) runs the full pipeline on a schedule; **`python -m scheduler`** is the same orchestration locally or in CI.
 
 ---
 
@@ -176,7 +176,7 @@ def run_weekly_pulse():
 |------|------|
 | **Phase 4 append** | [`shared/google_docs_client.py`](shared/google_docs_client.py) (`GOOGLE_DOCS_APPEND_TRANSPORT=direct` + service account) or [`shared/mcp_google_docs_append.py`](shared/mcp_google_docs_append.py) (`=mcp` + `npx @a-bonus/google-docs-mcp` + OAuth token). When append is explicitly requested (`--google-doc-append` / enabled path), failure is treated as run failure (not best-effort). See [docs/GOOGLE_DOCS.md](docs/GOOGLE_DOCS.md). |
 | **Cursor (IDE)** | [`.cursor/mcp.json`](.cursor/mcp.json) launches [`.cursor/google-docs-mcp.sh`](.cursor/google-docs-mcp.sh), which `source`s project `.env` so `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` reach the MCP server (plain `envFile` is unreliable in some clients). |
-| **Web UI + Email API** | [`web/main.py`](web/main.py) — FastAPI: `GET /api/reports/latest`, `POST /api/email/send` (full `*_pulse.md` as plain + HTML). Dashboard [`web/static/`](web/static/) accepts recipient emails in the UI (validated with Pydantic), includes in-flight sending feedback, and supports optional token-protected sends. Transport: `EMAIL_TRANSPORT=smtp` (default) or `EMAIL_TRANSPORT=mcp`. |
+| **Web UI + Email API** | [`web/main.py`](web/main.py) — FastAPI: `GET /api/reports/latest`, `POST /api/email/send` (full `*_pulse.md` as plain + HTML). Dashboard [`web/static/`](web/static/) accepts recipient emails in the UI (validated with Pydantic), includes in-flight sending feedback, and supports optional token-protected sends. Transport: `EMAIL_TRANSPORT=smtp` (default) or `EMAIL_TRANSPORT=mcp`. MCP mode uses [`shared/mcp_email_send.py`](shared/mcp_email_send.py) with strict response validation and fails the request when the MCP server reports send errors. |
 | **Auto-email after run** | If `EMAIL_REPORT_AFTER_PIPELINE=true`, [`scheduler/run_pipeline.py`](scheduler/run_pipeline.py) calls the same mailer after Phase 4 using configured transport (`smtp` or `mcp`). |
 
 GitHub Actions **minimum** schedule interval is **5 minutes**; production uses **once per day** (see [docs/SCHEDULER.md](docs/SCHEDULER.md)).
@@ -1220,7 +1220,7 @@ gantt
 | C4  | Extract ratings, thumbs_up, date  | Phase 1 CSV schema (all fields extracted)                                     |
 | C5  | Last 12 weeks duration            | Phase 1 date filter + cache window management                                 |
 | C6  | Scheduled weekly / daily pipeline run | Phase 0: [`.github/workflows/scheduled-pulse.yml`](.github/workflows/scheduled-pulse.yml) (default **10:00 UTC** daily; adjust cron for IST) or `python -m scheduler` / cron |
-| C7  | Incremental capability             | Cache-aware helpers exist; default scheduler path runs backfill-oriented Phase 1 |
+| C7  | Incremental capability             | Scheduler supports `SCHEDULER_PHASE1_MODE=auto|incremental|backfill`; default `auto` fills only missing lookback weeks and consolidates |
 | C8  | Free Gemini/Groq models only      | Free-tier providers supported; Groq defaults in Phases 2–4, Gemini optional via config |
 | C9  | Chunking for rate limits          | Phase 2 batching (80 reviews/chunk)                                           |
 | C10 | Multiple LLMs across phases       | Groq + Gemini supported; active defaults favor Groq unless overridden          |
@@ -1239,10 +1239,10 @@ gantt
 | **Data retention**    | Lookback-window retention helpers exist; automated cleanup should be explicitly scheduled/enabled |
 | **Play Store TOS**    | `google-play-scraper` uses public data; no auth bypass |
 | **LLM data privacy**  | Both Groq and Gemini free tiers do not retain prompt data for training (per current policies) |
-| **Web / email**       | Optional `PULSE_WEB_API_TOKEN` for `POST /api/email/send`; email transport configurable (`EMAIL_TRANSPORT=smtp|mcp`); do not expose dashboard on public internet without TLS + auth |
+| **Web / email**       | Optional `PULSE_WEB_API_TOKEN` for `POST /api/email/send`; email transport configurable (`EMAIL_TRANSPORT=smtp|mcp`); for MCP Gmail transport, enable Gmail API in the Google project and complete OAuth token setup; do not expose dashboard on public internet without TLS + auth |
 | **Google OAuth (MCP)**| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` in `.env`; refresh token in `~/.config/google-docs-mcp/token.json` (or `GOOGLE_DOCS_MCP_TOKEN_JSON` in CI) |
 
 
 ---
 
-*Document updated 2026-03-24 — v1.3 aligns scheduler mode behavior, E2E `.env` parsing, mandatory Google Docs append failure semantics, and configurable email transport (`smtp`/`mcp`).*
+*Document updated 2026-03-24 — v1.4 adds MCP email hard-failure semantics, schema-compliant Gmail MCP send behavior, Gmail API prerequisite notes, and corrected scheduler incremental capability wording.*
