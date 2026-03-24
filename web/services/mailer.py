@@ -65,10 +65,14 @@ def send_pulse_email(
     recipients: Iterable[str],
     subject_prefix: str = "Weekly Product Pulse",
 ) -> None:
-    """Raise on SMTP failure."""
+    """Send report email via configured transport (SMTP default, MCP optional)."""
     recs = [r for r in recipients if r]
     if not recs:
         raise ValueError("No email recipients configured")
+
+    transport = _env_clean("EMAIL_TRANSPORT", "smtp").lower()
+    if transport not in ("smtp", "mcp"):
+        raise ValueError("EMAIL_TRANSPORT must be 'smtp' or 'mcp'")
 
     host = _env_clean("SMTP_HOST")
     try:
@@ -81,7 +85,7 @@ def send_pulse_email(
     use_tls = _env_clean("SMTP_USE_TLS") or "true"
     use_tls = use_tls.lower() in ("1", "true", "yes")
 
-    if not host or not from_addr:
+    if transport == "smtp" and (not host or not from_addr):
         raise ValueError("SMTP_HOST and SMTP_FROM must be set to send email")
 
     # Errno 8 "nodename nor servname ..." = DNS cannot resolve host — usually typo or empty host
@@ -105,6 +109,28 @@ __GREETING_HTML__
 {html_body}
 </body></html>"""
 
+    def _personalized_content(recipient: str) -> tuple[str, str]:
+        display_name = _display_name_from_email(recipient)
+        greeting_plain = f"Dear {display_name},\n\n"
+        greeting_html = f"<p><strong>Dear {display_name},</strong></p>"
+        html = wrapped_template.replace("__GREETING_HTML__", greeting_html)
+        return greeting_plain + markdown_body, html
+
+    if transport == "mcp":
+        from shared.mcp_email_send import send_email_via_mcp
+
+        for recipient in recs:
+            plain_body, html_body = _personalized_content(recipient)
+            ok = send_email_via_mcp(
+                to_email=recipient,
+                subject=f"{subject_prefix} — {iso_week}",
+                text_body=plain_body,
+                html_body=html_body,
+            )
+            if not ok:
+                raise RuntimeError(f"MCP email send failed for recipient: {recipient}")
+        return
+
     try:
         with smtplib.SMTP(host, port, timeout=60) as smtp:
             if use_tls:
@@ -113,22 +139,13 @@ __GREETING_HTML__
                 smtp.login(user, password)
             # Send one personalized message per recipient.
             for recipient in recs:
-                display_name = _display_name_from_email(recipient)
-                greeting_plain = f"Dear {display_name},\n\n"
-                greeting_html = f"<p><strong>Dear {display_name},</strong></p>"
+                plain_body, html_body = _personalized_content(recipient)
                 msg = MIMEMultipart("alternative")
                 msg["Subject"] = f"{subject_prefix} — {iso_week}"
                 msg["From"] = from_addr
                 msg["To"] = recipient
-                msg.attach(MIMEText(greeting_plain + markdown_body, "plain", "utf-8"))
-                wrapped = wrapped_template.replace("__GREETING_HTML__", greeting_html)
-                msg.attach(
-                    MIMEText(
-                        wrapped,
-                        "html",
-                        "utf-8",
-                    )
-                )
+                msg.attach(MIMEText(plain_body, "plain", "utf-8"))
+                msg.attach(MIMEText(html_body, "html", "utf-8"))
                 smtp.sendmail(from_addr, [recipient], msg.as_string())
     except OSError as e:
         if getattr(e, "errno", None) == 8 or "nodename nor servname" in str(e).lower():

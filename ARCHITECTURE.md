@@ -2,8 +2,8 @@
 
 > **Product**: IndMoney Play Store Review Intelligence  
 > **Author**: Senior AI Product Manager  
-> **Date**: 23 March 2026  
-> **Version**: 1.2
+> **Date**: 24 March 2026  
+> **Version**: 1.3
 
 ---
 
@@ -11,7 +11,7 @@
 
 WeeklyProductPulse is an automated pipeline that scrapes recent IndMoney Play Store reviews from a configurable lookback window (default 12 weeks), clusters them into themes, and produces a concise, PII-free weekly intelligence note — complete with user quotes and actionable recommendations. The system uses **free-tier LLM options** (Groq Llama 3.3 70B by default; Gemini optional per phase via config/env) with chunking and caching controls for rate limits.
 
-**Distribution & operations (v1.1+):** Outputs can be pushed to **Google Docs** (REST API with a service account, or **OAuth + MCP** via `@a-bonus/google-docs-mcp` from Python or Cursor). A **FastAPI** dashboard (`web/main.py`) serves the latest pulse in the browser and can **email** participants via SMTP. **GitHub Actions** (`.github/workflows/scheduled-pulse.yml`) runs the full pipeline on a schedule; **`python -m scheduler`** is the same orchestration locally or in CI.
+**Distribution & operations (v1.3+):** Outputs can be pushed to **Google Docs** (REST API with a service account, or **OAuth + MCP** via `@a-bonus/google-docs-mcp` from Python or Cursor). A **FastAPI** dashboard (`web/main.py`) serves the latest pulse in the browser and can email participants via **SMTP (default)** or **MCP email transport** (`EMAIL_TRANSPORT=mcp`). **GitHub Actions** (`.github/workflows/scheduled-pulse.yml`) runs the full pipeline on a schedule; **`python -m scheduler`** is the same orchestration locally or in CI.
 
 ---
 
@@ -121,10 +121,10 @@ Phase 4: Weekly pulse report + 3 action ideas
 | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Trigger**                    | Daily **10:00 UTC** via [`.github/workflows/scheduled-pulse.yml`](.github/workflows/scheduled-pulse.yml) (edit cron; e.g. **10:00 IST** → `30 4 * * *`); or manual / local cron |
 | **Mechanism**                  | GitHub Actions `schedule` + `workflow_dispatch`; locally: **`python -m scheduler`** or [`scripts/run_e2e.sh`](scripts/run_e2e.sh) |
-| **Entry point (current repo)** | [`scheduler/run_pipeline.py`](scheduler/run_pipeline.py) (`python -m scheduler`) runs Phase 1 (`run_backfill.py`) → 2 → 3 → 4. Optional: **[`EMAIL_REPORT_AFTER_PIPELINE`](docs/WEB_DASHBOARD.md)** sends SMTP email after Phase 4. See [docs/SCHEDULER.md](docs/SCHEDULER.md). |
+| **Entry point (current repo)** | [`scheduler/run_pipeline.py`](scheduler/run_pipeline.py) (`python -m scheduler`) runs Phase 1 (mode: `auto`/`incremental`/`backfill`) → 2 → 3 → 4. Optional: **[`EMAIL_REPORT_AFTER_PIPELINE`](docs/WEB_DASHBOARD.md)** sends post-run email after Phase 4. See [docs/SCHEDULER.md](docs/SCHEDULER.md). |
 | **Idempotency**                | Week-based caching in `data/cache/` and derived artifacts in `data/tagged/` so re-runs can be incremental. |
 | **CI / secrets**               | Workflow sets `GROQ_API_KEY`, `GEMINI_API_KEY`, optional Google OAuth + MCP token for Doc append; Node 20 for `npx`. See workflow file and [docs/SCHEDULER.md](docs/SCHEDULER.md). |
-| **E2E test**                   | [docs/E2E_PIPELINE.md](docs/E2E_PIPELINE.md) — full pipeline or `SKIP_BACKFILL=1` when `data/consolidated/<week>_full.csv` exists. |
+| **E2E test**                   | [docs/E2E_PIPELINE.md](docs/E2E_PIPELINE.md) — full pipeline or `SKIP_BACKFILL=1` when `data/consolidated/<week>_full.csv` exists. Script now parses `.env` safely (no shell `source` dependency), so values with spaces (e.g. `SMTP_FROM`) are supported. |
 
 
 **Orchestrator Pseudocode:**
@@ -168,16 +168,16 @@ def run_weekly_pulse():
 ```
 
 > [!TIP]
-> **Current scheduler behavior**: `python -m scheduler` calls `run_backfill.py`, which rebuilds the lookback window for the run before continuing with Phases 2–4. For strict "new week only" incremental runs, use the Phase 1 cache-aware flows directly and/or skip backfill in controlled environments where consolidated input already exists.
+> **Current scheduler behavior**: `python -m scheduler` supports `SCHEDULER_PHASE1_MODE=auto|incremental|backfill` (default `auto`). In `auto`, missing lookback weeks are fetched and consolidated, then Phases 2–4 run.
 
 ### Phase 0.1 — Distribution: Google Docs, Cursor MCP, web dashboard & email
 
 | Path | Role |
 |------|------|
-| **Phase 4 append** | [`shared/google_docs_client.py`](shared/google_docs_client.py) (`GOOGLE_DOCS_APPEND_TRANSPORT=direct` + service account) or [`shared/mcp_google_docs_append.py`](shared/mcp_google_docs_append.py) (`=mcp` + `npx @a-bonus/google-docs-mcp` + OAuth token). See [docs/GOOGLE_DOCS.md](docs/GOOGLE_DOCS.md). |
+| **Phase 4 append** | [`shared/google_docs_client.py`](shared/google_docs_client.py) (`GOOGLE_DOCS_APPEND_TRANSPORT=direct` + service account) or [`shared/mcp_google_docs_append.py`](shared/mcp_google_docs_append.py) (`=mcp` + `npx @a-bonus/google-docs-mcp` + OAuth token). When append is explicitly requested (`--google-doc-append` / enabled path), failure is treated as run failure (not best-effort). See [docs/GOOGLE_DOCS.md](docs/GOOGLE_DOCS.md). |
 | **Cursor (IDE)** | [`.cursor/mcp.json`](.cursor/mcp.json) launches [`.cursor/google-docs-mcp.sh`](.cursor/google-docs-mcp.sh), which `source`s project `.env` so `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` reach the MCP server (plain `envFile` is unreliable in some clients). |
-| **Web UI + SMTP** | [`web/main.py`](web/main.py) — FastAPI: `GET /api/reports/latest`, `POST /api/email/send` (full `*_pulse.md` as plain + HTML). Dashboard [`web/static/`](web/static/) accepts **recipient emails in the UI** (validated with Pydantic); optional fallback to `EMAIL_RECIPIENTS`. See [docs/WEB_DASHBOARD.md](docs/WEB_DASHBOARD.md). |
-| **Auto-email after run** | If `EMAIL_REPORT_AFTER_PIPELINE=true`, [`scheduler/run_pipeline.py`](scheduler/run_pipeline.py) calls the mailer after Phase 4. |
+| **Web UI + Email API** | [`web/main.py`](web/main.py) — FastAPI: `GET /api/reports/latest`, `POST /api/email/send` (full `*_pulse.md` as plain + HTML). Dashboard [`web/static/`](web/static/) accepts recipient emails in the UI (validated with Pydantic), includes in-flight sending feedback, and supports optional token-protected sends. Transport: `EMAIL_TRANSPORT=smtp` (default) or `EMAIL_TRANSPORT=mcp`. |
+| **Auto-email after run** | If `EMAIL_REPORT_AFTER_PIPELINE=true`, [`scheduler/run_pipeline.py`](scheduler/run_pipeline.py) calls the same mailer after Phase 4 using configured transport (`smtp` or `mcp`). |
 
 GitHub Actions **minimum** schedule interval is **5 minutes**; production uses **once per day** (see [docs/SCHEDULER.md](docs/SCHEDULER.md)).
 
@@ -261,7 +261,7 @@ data/
 ```
 
 > [!IMPORTANT]
-> **Current scheduled run behavior**: The scheduler invokes backfill-oriented Phase 1 execution and then consolidates the lookback window. Cache files are still used as phase artifacts, but the default scheduled path is not a strict "new week only" delta fetch.
+> **Current scheduled run behavior**: Scheduler mode is configurable. Default `auto` fills missing lookback weeks from cache state, expires out-of-window caches, and consolidates before Phases 2–4.
 
 #### 1.5 Rate & Volume Estimates
 
@@ -719,8 +719,8 @@ WeeklyProductPulse/
 ├── phase2_clustering/         # Groq theme tagging + fuzzy reduce to top themes
 ├── phase3_insights/           # Groq (default) or Gemini quote selection for the top themes
 ├── phase4_report/             # Weekly pulse Markdown + PII regex scrub (`report_generator.py`)
-├── shared/                    # Logger, LLM clients, Google Docs direct + MCP append helpers
-├── web/                       # FastAPI dashboard + SMTP email (optional)
+├── shared/                    # Logger, LLM clients, Google Docs direct + MCP append, MCP email helper
+├── web/                       # FastAPI dashboard + email API (`smtp` or `mcp`, optional)
 │   ├── main.py
 │   ├── services/              # report discovery, mailer
 │   └── static/                # index.html, assets/css, assets/js
@@ -1155,6 +1155,7 @@ def retry_with_backoff(max_retries=3, base_delay=2):
 | **Web dashboard**       | FastAPI + Uvicorn         | 0.115+  | MIT        |
 | **Email (reports)**     | `smtplib` + Markdown→HTML | stdlib  | —          |
 | **Google Docs (MCP)**   | `@a-bonus/google-docs-mcp` via `npx`, `mcp` Python pkg | — | MIT |
+| **Email transport**     | `smtplib` (SMTP) or MCP email server via `mcp` + `npx` | — | — |
 | **Config**              | `python-dotenv`           | —       | BSD        |
 | **HTTP client**         | Stdlib + SDK clients used per integration | — | — |
 
@@ -1238,10 +1239,10 @@ gantt
 | **Data retention**    | Lookback-window retention helpers exist; automated cleanup should be explicitly scheduled/enabled |
 | **Play Store TOS**    | `google-play-scraper` uses public data; no auth bypass |
 | **LLM data privacy**  | Both Groq and Gemini free tiers do not retain prompt data for training (per current policies) |
-| **Web / email**       | Optional `PULSE_WEB_API_TOKEN` for `POST /api/email/send`; SMTP credentials via env; do not expose dashboard on public internet without TLS + auth |
+| **Web / email**       | Optional `PULSE_WEB_API_TOKEN` for `POST /api/email/send`; email transport configurable (`EMAIL_TRANSPORT=smtp|mcp`); do not expose dashboard on public internet without TLS + auth |
 | **Google OAuth (MCP)**| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` in `.env`; refresh token in `~/.config/google-docs-mcp/token.json` (or `GOOGLE_DOCS_MCP_TOKEN_JSON` in CI) |
 
 
 ---
 
-*Document updated 2026-03-23 — v1.2 aligns architecture text with current scheduler/model defaults, ingestion sort mode, and implementation status notes.*
+*Document updated 2026-03-24 — v1.3 aligns scheduler mode behavior, E2E `.env` parsing, mandatory Google Docs append failure semantics, and configurable email transport (`smtp`/`mcp`).*
