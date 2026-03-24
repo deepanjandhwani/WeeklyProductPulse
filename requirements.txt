@@ -4,7 +4,8 @@ pandas==2.2.3                   # DataFrame manipulation & CSV I/O
 python-dotenv==1.0.1            # Load .env API keys into environment
 
 # ── LLM Clients (Phase 2 & 3/4) ───────────────────────────────────────────────
-groq==0.11.0                    # Groq API client (Llama 3.3 70B — theme tagging)
+# groq>=0.13.x required: older groq passes httpx `proxies=` which httpx 0.28+ removed (CI/runtime init failure).
+groq>=0.13.1,<2                 # Groq API client (Llama 3.3 70B — theme tagging)
 google-generativeai==0.8.3      # Gemini API client (Flash-Lite — report gen)
 
 # ── Fuzzy Matching (Phase 2 theme deduplication) ──────────────────────────────
@@ -19,8 +20,6 @@ mcp>=1.0.0                         # MCP stdio client for Pipeline → MCP → G
 # ── Utilities ─────────────────────────────────────────────────────────────────
 tenacity==8.5.0                 # Retry logic with exponential backoff
 rich==13.9.4                    # Pretty console output for run summaries
-groq>=0.4.2
-google-generativeai>=0.8.0
 
 # ── Web dashboard + email (optional) ──────────────────────────────────────────
 fastapi>=0.115.0
