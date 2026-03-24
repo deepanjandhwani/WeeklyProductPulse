@@ -66,6 +66,18 @@ jobs:
           fi
           echo "GROQ_API_KEY is set (value not shown)."
 
+      # Scheduler always runs Phase 4 with --google-doc-append; CI does not read Railway or .env — only secrets below.
+      - name: Verify Google Docs secrets (append is mandatory in this workflow)
+        shell: bash
+        env:
+          GOOGLE_DOCS_DOCUMENT_ID: ${{ secrets.GOOGLE_DOCS_DOCUMENT_ID }}
+        run: |
+          if [[ -z "${GOOGLE_DOCS_DOCUMENT_ID// }" ]]; then
+            echo "::error::GOOGLE_DOCS_DOCUMENT_ID is missing or empty. Railway and local .env are NOT used here. Add the same document ID as a repository secret named GOOGLE_DOCS_DOCUMENT_ID (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+          echo "GOOGLE_DOCS_DOCUMENT_ID is set (value not shown)."
+
       - name: Write Google Docs MCP OAuth token (optional)
         shell: bash
         env:
