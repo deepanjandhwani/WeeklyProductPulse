@@ -3,7 +3,7 @@
 > **Product**: IndMoney Play Store Review Intelligence  
 > **Author**: Senior AI Product Manager  
 > **Date**: 24 March 2026  
-> **Version**: 1.4
+> **Version**: 1.5
 
 ---
 
@@ -11,7 +11,7 @@
 
 WeeklyProductPulse is an automated pipeline that scrapes recent IndMoney Play Store reviews from a configurable lookback window (default 12 weeks), clusters them into themes, and produces a concise, PII-free weekly intelligence note — complete with user quotes and actionable recommendations. The system uses **free-tier LLM options** (Groq Llama 3.3 70B by default; Gemini optional per phase via config/env) with chunking and caching controls for rate limits.
 
-**Distribution & operations (v1.4+):** Outputs can be pushed to **Google Docs** (REST API with a service account, or **OAuth + MCP** via `@a-bonus/google-docs-mcp` from Python or Cursor). A **FastAPI** dashboard (`web/main.py`) serves the latest pulse in the browser and can email participants via **SMTP (default)** or **MCP email transport** (`EMAIL_TRANSPORT=mcp`). MCP email now uses schema-compliant tool arguments and treats MCP text error payloads as hard failures (no silent "success"). **GitHub Actions** (`.github/workflows/scheduled-pulse.yml`) runs the full pipeline on a schedule; **`python -m scheduler`** is the same orchestration locally or in CI.
+**Distribution & operations (v1.5+):** Outputs can be pushed to **Google Docs** (REST API with a service account, or **OAuth + MCP** via `@a-bonus/google-docs-mcp` from Python or Cursor). A **FastAPI** dashboard (`web/main.py`) serves the latest pulse in the browser and can email participants via **SMTP (default)** or **MCP email transport** (`EMAIL_TRANSPORT=mcp`). MCP email uses schema-compliant tool arguments and treats MCP text error payloads as hard failures (no silent "success"). Deployment can run either via buildpack or Docker; current setup includes a repo-level `Dockerfile` + `.dockerignore` for Railway container deployment. **GitHub Actions** (`.github/workflows/scheduled-pulse.yml`) runs the full pipeline on a schedule; **`python -m scheduler`** is the same orchestration locally or in CI.
 
 ---
 
@@ -1156,6 +1156,7 @@ def retry_with_backoff(max_retries=3, base_delay=2):
 | **Email (reports)**     | `smtplib` + Markdown→HTML | stdlib  | —          |
 | **Google Docs (MCP)**   | `@a-bonus/google-docs-mcp` via `npx`, `mcp` Python pkg | — | MIT |
 | **Email transport**     | `smtplib` (SMTP) or MCP email server via `mcp` + `npx` | — | — |
+| **Container runtime**   | Docker (`Dockerfile` + `.dockerignore`) for Railway deploys | — | — |
 | **Config**              | `python-dotenv`           | —       | BSD        |
 | **HTTP client**         | Stdlib + SDK clients used per integration | — | — |
 
@@ -1245,4 +1246,4 @@ gantt
 
 ---
 
-*Document updated 2026-03-24 — v1.4 adds MCP email hard-failure semantics, schema-compliant Gmail MCP send behavior, Gmail API prerequisite notes, and corrected scheduler incremental capability wording.*
+*Document updated 2026-03-24 — v1.5 adds Railway-ready Docker deployment artifacts (`Dockerfile`, `.dockerignore`) and updates architecture notes for containerized operations.*
