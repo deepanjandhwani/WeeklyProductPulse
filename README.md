@@ -42,7 +42,9 @@ See `ARCHITECTURE.md` for full design details.
 | `EMAIL_MCP_COMMAND` | `npx` |
 | `EMAIL_MCP_ARGS` | `-y @gongrzhe/server-gmail-autoauth-mcp` |
 | `EMAIL_MCP_TOOL` | `send_email` |
-| `PULSE_WEB_API_TOKEN` | Random 32+ char string (protects email API) |
+| `PULSE_WEB_API_TOKEN` | Random 32+ char string (protects email + upload API) |
+| `GMAIL_MCP_CREDENTIALS_JSON` | Full JSON from `~/.gmail-mcp/credentials.json` (OAuth refresh token for Gmail MCP) |
+| `GOOGLE_DOCS_MCP_TOKEN_JSON` | Full JSON from `~/.config/google-docs-mcp/token.json` (optional, for Docs append from Railway) |
 | `LOG_LEVEL` | `INFO` |
 
 5. Generate a public domain under Railway → Networking → Public Networking.
@@ -145,7 +147,7 @@ Each environment reads its own source. **They do not share config automatically.
 2. Set `EMAIL_TRANSPORT=mcp` and MCP vars (see Railway table above).
 3. Run auth once locally: `npx -y @gongrzhe/server-gmail-autoauth-mcp auth`
 4. OAuth keys file: `~/.gmail-mcp/gcp-oauth.keys.json` (auto-created from `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`).
-5. For Railway: inject OAuth credentials/token as env vars or secrets.
+5. For Railway: add `GMAIL_MCP_CREDENTIALS_JSON` as a variable (paste the full JSON from `~/.gmail-mcp/credentials.json`). The `entrypoint.sh` script writes it to disk on container startup.
 
 ## MCP Google Docs Setup
 

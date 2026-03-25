@@ -1156,7 +1156,7 @@ def retry_with_backoff(max_retries=3, base_delay=2):
 | **Email (reports)**     | `smtplib` + Markdown→HTML | stdlib  | —          |
 | **Google Docs (MCP)**   | `@a-bonus/google-docs-mcp` via `npx`, `mcp` Python pkg | — | MIT |
 | **Email transport**     | `smtplib` (SMTP) or MCP email server via `mcp` + `npx` | — | — |
-| **Container runtime**   | Docker (`Dockerfile` + `.dockerignore`) for Railway deploys | — | — |
+| **Container runtime**   | Docker (`Dockerfile` + `entrypoint.sh` + `.dockerignore`) for Railway deploys | — | — |
 | **Frontend hosting**    | Vercel (static deploy from `web/static/` via `vercel.json`) | — | Free |
 | **Config**              | `python-dotenv`           | —       | BSD        |
 | **HTTP client**         | Stdlib + SDK clients used per integration | — | — |
@@ -1242,9 +1242,9 @@ gantt
 | **Play Store TOS**    | `google-play-scraper` uses public data; no auth bypass |
 | **LLM data privacy**  | Both Groq and Gemini free tiers do not retain prompt data for training (per current policies) |
 | **Web / email**       | Optional `PULSE_WEB_API_TOKEN` for `POST /api/email/send`; email transport configurable (`EMAIL_TRANSPORT=smtp|mcp`); for MCP Gmail transport, enable Gmail API in the Google project and complete OAuth token setup; do not expose dashboard on public internet without TLS + auth |
-| **Google OAuth (MCP)**| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` in `.env`; refresh token in `~/.config/google-docs-mcp/token.json` (or `GOOGLE_DOCS_MCP_TOKEN_JSON` in CI) |
+| **Google OAuth (MCP)**| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` in `.env`; refresh token in `~/.config/google-docs-mcp/token.json` (or `GOOGLE_DOCS_MCP_TOKEN_JSON` in CI/Railway). Gmail MCP credentials from `~/.gmail-mcp/credentials.json` (or `GMAIL_MCP_CREDENTIALS_JSON` in Railway). `entrypoint.sh` writes these files from env vars on container startup. |
 
 
 ---
 
-*Document updated 2026-03-24 — v1.8 adds CI→Railway report upload, Vercel static deploy, and weekly Sunday 10:00 PM IST pipeline schedule.*
+*Document updated 2026-03-24 — v1.8 adds CI→Railway report upload, Vercel static deploy, weekly Sunday 10:00 PM IST schedule, and `entrypoint.sh` for writing MCP OAuth files from env vars on Railway.*
