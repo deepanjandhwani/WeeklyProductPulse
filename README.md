@@ -14,7 +14,8 @@ See `ARCHITECTURE.md` for full design details.
 
 | Component | Platform | Role |
 |-----------|----------|------|
-| **Web dashboard + email API** | Railway (Docker) | Hosts FastAPI app; users view reports and send emails from the UI |
+| **Backend API + email** | Railway (Docker) | Hosts FastAPI app; serves report JSON and handles email sending |
+| **Frontend dashboard** | Vercel (static) | Serves HTML/CSS/JS; proxies `/api/*` requests to Railway |
 | **Scheduled pipeline** | GitHub Actions | Runs Phases 1–4 daily at 10:00 UTC; appends report to Google Docs |
 | **Google Docs** | Google Workspace | Primary output; report appended automatically after each pipeline run |
 | **Email** | Gmail MCP (or SMTP) | Sent only when a user triggers it from the dashboard UI |
@@ -46,6 +47,18 @@ See `ARCHITECTURE.md` for full design details.
 
 5. Generate a public domain under Railway → Networking → Public Networking.
 6. Verify: `https://<railway-domain>/api/reports`
+
+### Vercel (frontend)
+
+1. Go to [vercel.com](https://vercel.com) and import your GitHub repo.
+2. Set **Root Directory** to `WeeklyProductPulse`.
+3. Framework Preset: **Other** (no framework — it's plain static HTML).
+4. Build & Output settings should auto-detect from `vercel.json`:
+   - Build Command: (leave empty / none)
+   - Output Directory: `web/static`
+5. **Before deploying**, edit `vercel.json` and replace `REPLACE_WITH_YOUR_RAILWAY_DOMAIN` with your actual Railway public domain (e.g. `weeklyproductpulse-production-xxxx.up.railway.app`).
+6. Optionally add Railway CORS: in Railway Variables, set `PULSE_WEB_CORS_ORIGINS=https://your-vercel-domain.vercel.app` (allows direct API calls as a fallback).
+7. Deploy. The Vercel URL will serve the dashboard and proxy all `/api/*` calls to Railway.
 
 ### GitHub Actions (scheduled pipeline)
 

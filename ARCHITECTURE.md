@@ -3,7 +3,7 @@
 > **Product**: IndMoney Play Store Review Intelligence  
 > **Author**: Senior AI Product Manager  
 > **Date**: 24 March 2026  
-> **Version**: 1.6
+> **Version**: 1.7
 
 ---
 
@@ -11,7 +11,7 @@
 
 WeeklyProductPulse is an automated pipeline that scrapes recent IndMoney Play Store reviews from a configurable lookback window (default 12 weeks), clusters them into themes, and produces a concise, PII-free weekly intelligence note — complete with user quotes and actionable recommendations. The system uses **free-tier LLM options** (Groq Llama 3.3 70B by default; Gemini optional per phase via config/env) with chunking and caching controls for rate limits.
 
-**Distribution & operations (v1.6+):** Outputs can be pushed to **Google Docs** (REST API with a service account, or **OAuth + MCP** via `@a-bonus/google-docs-mcp` from Python or Cursor). A **FastAPI** dashboard (`web/main.py`) serves the latest pulse in the browser and can email participants via **SMTP (default)** or **MCP email transport** (`EMAIL_TRANSPORT=mcp`). MCP email uses schema-compliant tool arguments and treats MCP text error payloads as hard failures (no silent "success"). Deployment runs on **Railway** (Docker container) for the web dashboard/API and **GitHub Actions** for the scheduled pipeline. The CI workflow validates required secrets (`GROQ_API_KEY`, `GOOGLE_DOCS_DOCUMENT_ID`) before running and writes `GOOGLE_DOCS_MCP_TOKEN_JSON` to disk for MCP append. Email is sent only on-demand from the UI (not auto-sent after pipeline runs).
+**Distribution & operations (v1.6+):** Outputs can be pushed to **Google Docs** (REST API with a service account, or **OAuth + MCP** via `@a-bonus/google-docs-mcp` from Python or Cursor). A **FastAPI** dashboard (`web/main.py`) serves the latest pulse in the browser and can email participants via **SMTP (default)** or **MCP email transport** (`EMAIL_TRANSPORT=mcp`). MCP email uses schema-compliant tool arguments and treats MCP text error payloads as hard failures (no silent "success"). Deployment runs on **Railway** (Docker container) for the backend API and **Vercel** for the static frontend dashboard (with API rewrites proxying `/api/*` to Railway). **GitHub Actions** handles the scheduled pipeline. The CI workflow validates required secrets (`GROQ_API_KEY`, `GOOGLE_DOCS_DOCUMENT_ID`) before running and writes `GOOGLE_DOCS_MCP_TOKEN_JSON` to disk for MCP append. Email is sent only on-demand from the UI (not auto-sent after pipeline runs).
 
 ---
 
@@ -1157,6 +1157,7 @@ def retry_with_backoff(max_retries=3, base_delay=2):
 | **Google Docs (MCP)**   | `@a-bonus/google-docs-mcp` via `npx`, `mcp` Python pkg | — | MIT |
 | **Email transport**     | `smtplib` (SMTP) or MCP email server via `mcp` + `npx` | — | — |
 | **Container runtime**   | Docker (`Dockerfile` + `.dockerignore`) for Railway deploys | — | — |
+| **Frontend hosting**    | Vercel (static deploy from `web/static/` via `vercel.json`) | — | Free |
 | **Config**              | `python-dotenv`           | —       | BSD        |
 | **HTTP client**         | Stdlib + SDK clients used per integration | — | — |
 
@@ -1246,4 +1247,4 @@ gantt
 
 ---
 
-*Document updated 2026-03-24 — v1.6 documents production topology (Railway Docker deploy + GitHub Actions CI), CI secret validation, Groq SDK httpx compatibility fix, and three-environment secret management (local `.env`, Railway Variables, GitHub Secrets).*
+*Document updated 2026-03-24 — v1.7 adds Vercel static frontend deployment with API rewrites to Railway; production topology is now Railway (API) + Vercel (UI) + GitHub Actions (pipeline).*
