@@ -3,11 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Weekly Product Pulse</title>
+  <title>Weekly Product Pulse — IndMoney</title>
+  <meta name="description" content="Weekly Play Store review intelligence for IndMoney" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/assets/css/app.css?v=5" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/css/app.css?v=6" />
 </head>
 <body>
   <div class="layout">
@@ -15,71 +16,78 @@
       <div class="brand">
         <img class="brand-logo" src="/assets/images/indmoney-logo.png" alt="IndMoney logo" onerror="this.style.display='none'" />
         <div>
-          <p class="brand-kicker">IndMoney Customer Voice</p>
+          <p class="brand-kicker">IndMoney</p>
           <h1>Weekly Product Pulse</h1>
-          <p class="tagline">IndMoney Play Store intelligence — rolling 12-week window</p>
+          <p class="tagline">Play Store review intelligence, updated every week</p>
         </div>
       </div>
       <div class="actions">
-        <label class="field-label" for="week-select">Report week</label>
+        <label class="field-label" for="week-select">Select week</label>
         <select id="week-select" aria-label="Select report week"></select>
-        <button type="button" id="btn-refresh" class="btn secondary">Refresh</button>
+        <button type="button" id="btn-refresh" class="btn secondary" aria-label="Refresh report">
+          <svg class="btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          Refresh
+        </button>
       </div>
-      <p class="window-note">
-        Each selected week is the window end week (that week + previous 11 weeks).
-      </p>
     </header>
 
     <aside class="meta" id="meta-panel">
       <div class="meta-row">
-        <span class="label">Week</span>
+        <span class="label">Viewing</span>
         <strong id="meta-week">—</strong>
       </div>
       <div class="meta-row">
-        <span class="label">Report</span>
-        <span id="meta-file">Weekly customer pulse</span>
+        <span id="meta-status" class="meta-badge empty">Loading…</span>
       </div>
     </aside>
 
+    <main class="content">
+      <div id="status" class="status hidden" role="status"></div>
+      <article id="report" class="report prose" aria-live="polite">
+        <div class="loading-skeleton">
+          <div class="skel-line w80"></div>
+          <div class="skel-line w60"></div>
+          <div class="skel-line w90"></div>
+          <div class="skel-line w45"></div>
+          <div class="skel-line w70"></div>
+        </div>
+      </article>
+    </main>
+
     <section class="email-panel" aria-labelledby="email-panel-title">
-      <h2 id="email-panel-title" class="email-panel-title">Send full report by email</h2>
+      <div class="email-panel-header">
+        <svg class="email-panel-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        <h2 id="email-panel-title" class="email-panel-title">Share this report</h2>
+      </div>
       <p class="email-panel-hint">
-        Enter one or more addresses (comma, space, or newline). The <strong>entire</strong> pulse for the selected week
-        is sent in both plain text and rich email format.
+        Send the full weekly pulse to your team. Enter email addresses separated by commas.
       </p>
-      <label for="email-recipients">Recipient email addresses</label>
+      <label for="email-recipients">Recipients</label>
       <textarea
         id="email-recipients"
-        rows="3"
+        rows="2"
         autocomplete="email"
-        placeholder="lead@company.com, pm@company.com"
+        placeholder="name@company.com, team-lead@company.com"
         spellcheck="false"
       ></textarea>
       <details class="advanced-settings">
         <summary>Advanced settings</summary>
         <div class="email-panel-row">
-          <label for="api-token" class="label-optional">API token (only if your admin asked for it)</label>
-          <input type="password" id="api-token" autocomplete="off" placeholder="Optional token" />
+          <label for="api-token" class="label-optional">API token</label>
+          <input type="password" id="api-token" autocomplete="off" placeholder="Enter token if required" />
         </div>
       </details>
       <div class="email-panel-actions">
-        <button type="button" id="btn-email" class="btn primary">Send email</button>
+        <button type="button" id="btn-email" class="btn primary">Send report</button>
       </div>
     </section>
 
-    <main class="content">
-      <div id="status" class="status hidden" role="status"></div>
-      <article id="report" class="report prose" aria-live="polite">
-        <p class="placeholder">Loading report…</p>
-      </article>
-    </main>
-
     <footer class="foot">
       <span>WeeklyProductPulse</span>
-      <span class="sep">·</span>
+      <span class="sep">&middot;</span>
       <span>IndMoney Customer Voice</span>
     </footer>
   </div>
-  <script src="/assets/js/app.js?v=4" type="module"></script>
+  <script src="/assets/js/app.js?v=6" type="module"></script>
 </body>
 </html>
