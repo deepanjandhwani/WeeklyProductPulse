@@ -4,50 +4,76 @@ WeeklyProductPulse is an end-to-end Voice-of-Customer pipeline for IndMoney Play
 
 - Ingests a rolling 12-week window of reviews
 - Clusters themes (Phase 2), extracts insights/quotes (Phase 3), generates weekly report (Phase 4)
-- Optionally appends to Google Docs via MCP
-- Supports SMTP email delivery
-- Includes FastAPI dashboard for viewing/sending reports
+- Appends report to Google Docs via MCP (mandatory in scheduled runs)
+- Supports email delivery via SMTP or MCP (Gmail MCP)
+- Includes FastAPI dashboard for viewing reports and sending emails on-demand
 
 See `ARCHITECTURE.md` for full design details.
 
-## Recommended Deployment (Free/Low-Cost)
-
-### 1) Web app hosting (FastAPI + dashboard)
-
-Use an always-on VM (recommended: Oracle Cloud Always Free ARM VM).
-
-Reason:
-- Full control over outbound SMTP
-- Can install both Python and Node (`npx` required for Google Docs MCP append)
-- No cold starts for dashboard
-
-### 2) Scheduler hosting
-
-Use GitHub Actions cron for scheduled pipeline runs (`python -m scheduler`).
-
-Reason:
-- Built-in cron
-- Easy secrets management
-- Good fit for batch runs
-
 ## Production Topology
 
-- **VM**: runs FastAPI app (`uvicorn web.main:app`)
-- **GitHub Actions**: runs scheduled pipeline (`python -m scheduler`)
-- **Google Docs**: appended by Phase 4 using MCP transport
-- **SMTP provider**: used for email sends (UI/manual and optional post-pipeline)
+| Component | Platform | Role |
+|-----------|----------|------|
+| **Web dashboard + email API** | Railway (Docker) | Hosts FastAPI app; users view reports and send emails from the UI |
+| **Scheduled pipeline** | GitHub Actions | Runs Phases 1–4 daily at 10:00 UTC; appends report to Google Docs |
+| **Google Docs** | Google Workspace | Primary output; report appended automatically after each pipeline run |
+| **Email** | Gmail MCP (or SMTP) | Sent only when a user triggers it from the dashboard UI |
 
-## VM Setup (Oracle Ubuntu example)
+## Deployment
+
+### Railway (backend + UI)
+
+1. Create a Railway service from the GitHub repo.
+2. Set **Root Directory** to `WeeklyProductPulse`.
+3. Railway detects the `Dockerfile` and builds automatically.
+4. Add environment variables in Railway → Variables:
+
+| Variable | Value |
+|----------|-------|
+| `GROQ_API_KEY` | Groq API key |
+| `GEMINI_API_KEY` | Gemini API key (optional if all phases use Groq) |
+| `GOOGLE_DOCS_APPEND_ENABLED` | `true` |
+| `GOOGLE_DOCS_APPEND_TRANSPORT` | `mcp` |
+| `GOOGLE_DOCS_DOCUMENT_ID` | Google Doc ID from the document URL |
+| `GOOGLE_CLIENT_ID` | OAuth Desktop client ID |
+| `GOOGLE_CLIENT_SECRET` | OAuth Desktop client secret |
+| `EMAIL_TRANSPORT` | `mcp` |
+| `EMAIL_MCP_COMMAND` | `npx` |
+| `EMAIL_MCP_ARGS` | `-y @gongrzhe/server-gmail-autoauth-mcp` |
+| `EMAIL_MCP_TOOL` | `send_email` |
+| `PULSE_WEB_API_TOKEN` | Random 32+ char string (protects email API) |
+| `LOG_LEVEL` | `INFO` |
+
+5. Generate a public domain under Railway → Networking → Public Networking.
+6. Verify: `https://<railway-domain>/api/reports`
+
+### GitHub Actions (scheduled pipeline)
+
+Workflow: `.github/workflows/scheduled-pulse.yml`
+
+**Required repository secrets** (Settings → Secrets and variables → Actions):
+
+| Secret | What |
+|--------|------|
+| `GROQ_API_KEY` | Groq API key (same as Railway / `.env`) |
+| `GEMINI_API_KEY` | Gemini API key (optional) |
+| `GOOGLE_DOCS_DOCUMENT_ID` | Google Doc ID |
+| `GOOGLE_CLIENT_ID` | OAuth Desktop client ID |
+| `GOOGLE_CLIENT_SECRET` | OAuth Desktop client secret |
+| `GOOGLE_DOCS_MCP_TOKEN_JSON` | Full JSON from `~/.config/google-docs-mcp/token.json` (run `npx -y @a-bonus/google-docs-mcp auth` locally to generate) |
+
+**Optional repository variables:**
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `SCHEDULER_PHASE1_MODE` | `auto` | `auto` / `incremental` / `backfill` |
+| `SCHEDULER_SKIP_BACKFILL` | (unset) | Set `1` to skip Phase 1 if consolidated CSV exists |
+
+The workflow validates that `GROQ_API_KEY` and `GOOGLE_DOCS_DOCUMENT_ID` are set before running the pipeline.
+
+### Local development
 
 ```bash
-sudo apt update
-sudo apt install -y python3 python3-venv python3-pip nginx curl
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-sudo apt install -y nodejs
-```
-
-```bash
-git clone https://github.com/deepanjandhwani/WeeklyProductPulse.git
 cd WeeklyProductPulse/WeeklyProductPulse
 python3 -m venv .venv
 source .venv/bin/activate
@@ -59,74 +85,61 @@ cp .env.example .env
 Start web app:
 
 ```bash
-.venv/bin/uvicorn web.main:app --host 0.0.0.0 --port 8000
+.venv/bin/uvicorn web.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Then run behind Nginx + TLS (recommended for production).
-
-## Required Environment Variables
-
-Core:
-- `GROQ_API_KEY`
-- `GEMINI_API_KEY` (if using Gemini paths)
-
-Google Docs append:
-- `GOOGLE_DOCS_APPEND_ENABLED=true`
-- `GOOGLE_DOCS_APPEND_TRANSPORT=mcp`
-- `GOOGLE_DOCS_DOCUMENT_ID`
-- `GOOGLE_CLIENT_ID`
-- `GOOGLE_CLIENT_SECRET`
-
-SMTP:
-- `SMTP_HOST`
-- `SMTP_PORT`
-- `SMTP_USER`
-- `SMTP_PASSWORD`
-- `SMTP_FROM`
-- `SMTP_USE_TLS=true`
-
-Optional:
-- `EMAIL_REPORT_AFTER_PIPELINE=true`
-- `EMAIL_RECIPIENTS=email1@company.com,email2@company.com`
-
-## GitHub Actions Scheduler Setup
-
-Workflow: `.github/workflows/scheduled-pulse.yml`
-
-Configure repository secrets:
-- `GROQ_API_KEY`
-- `GEMINI_API_KEY`
-- `GOOGLE_DOCS_DOCUMENT_ID`
-- `GOOGLE_CLIENT_ID`
-- `GOOGLE_CLIENT_SECRET`
-- `GOOGLE_DOCS_MCP_TOKEN_JSON` (OAuth token JSON for MCP)
-
-Optional repository variables:
-- `SCHEDULER_PHASE1_MODE=auto` (recommended)
-- `SCHEDULER_SKIP_BACKFILL` (normally unset)
-
-## Run Commands
-
-Local scheduler run:
+Run full pipeline:
 
 ```bash
 python -m scheduler
 ```
 
-E2E script:
+E2E test:
 
 ```bash
 ./scripts/run_e2e.sh
 ```
 
-Fast re-test phases 2-4:
+Fast re-test (phases 2–4 only):
 
 ```bash
 SKIP_BACKFILL=1 WEEK=2026-W12 ./scripts/run_e2e.sh
 ```
 
+## Secret Management
+
+Each environment reads its own source. **They do not share config automatically.**
+
+| Environment | Where secrets live |
+|-------------|--------------------|
+| Local dev | `.env` file (git-ignored) |
+| Railway | Railway dashboard → Variables |
+| GitHub Actions | Repository → Settings → Secrets and variables → Actions |
+
+## MCP Email Setup (Gmail)
+
+1. Enable **Gmail API** in Google Cloud Console for your project.
+2. Set `EMAIL_TRANSPORT=mcp` and MCP vars (see Railway table above).
+3. Run auth once locally: `npx -y @gongrzhe/server-gmail-autoauth-mcp auth`
+4. OAuth keys file: `~/.gmail-mcp/gcp-oauth.keys.json` (auto-created from `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`).
+5. For Railway: inject OAuth credentials/token as env vars or secrets.
+
+## MCP Google Docs Setup
+
+1. Enable **Google Docs API**, **Google Drive API**, and **Google Sheets API** in Google Cloud Console.
+2. Create OAuth Desktop client; add yourself as test user on consent screen.
+3. Run auth once locally:
+   ```bash
+   cd WeeklyProductPulse/WeeklyProductPulse  # folder with .env
+   set -a && source .env && set +a
+   npx -y @a-bonus/google-docs-mcp auth
+   ```
+4. Token saved to `~/.config/google-docs-mcp/token.json`.
+5. For GitHub Actions: copy contents of `token.json` into secret `GOOGLE_DOCS_MCP_TOKEN_JSON`.
+
 ## Notes
 
-- `scripts/run_e2e.sh` uses safe `.env` parsing (handles values with spaces, e.g. `SMTP_FROM` display names).
-- If Google Docs append is requested but fails, Phase 4 fails by design.
-- For SMTP issues on managed PaaS, consider moving to an HTTPS email API provider.
+- `scripts/run_e2e.sh` uses safe `.env` parsing (handles values with spaces).
+- If Google Docs append is requested but fails, Phase 4 fails by design (mandatory).
+- Email is sent only from the UI (not auto-sent by the pipeline unless `EMAIL_REPORT_AFTER_PIPELINE=true`).
+- `groq>=0.13.1` is required for compatibility with `httpx>=0.28` (older versions crash on empty API keys).
