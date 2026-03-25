@@ -9,15 +9,16 @@ Run locally::
 from __future__ import annotations
 
 import os
+import re
 import smtplib
 from pathlib import Path
 
 from dotenv import load_dotenv
 
-# Ensure project-root .env is loaded when Uvicorn starts (SMTP_* and other vars)
 load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
-from fastapi import Body, Depends, FastAPI, Header, HTTPException
+import config
+from fastapi import Body, Depends, FastAPI, Header, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -127,6 +128,29 @@ def api_send_email(
         raise HTTPException(status_code=400, detail=str(e)) from e
     except (OSError, smtplib.SMTPException) as e:
         raise HTTPException(status_code=502, detail=f"SMTP error: {e}") from e
+
+
+_ISO_WEEK_RE = re.compile(r"^\d{4}-W\d{2}$")
+
+
+@app.post("/api/reports/upload")
+async def api_upload_report(
+    _: None = Depends(require_email_token),
+    file: UploadFile = ...,
+):
+    """Accept a ``*_pulse.md`` upload from CI and write it to ``data/reports/``."""
+    if not file.filename or not file.filename.endswith("_pulse.md"):
+        raise HTTPException(status_code=400, detail="Filename must match <YYYY-Wnn>_pulse.md")
+
+    stem = file.filename.removesuffix("_pulse.md")
+    if not _ISO_WEEK_RE.match(stem):
+        raise HTTPException(status_code=400, detail=f"Invalid ISO week in filename: {stem}")
+
+    config.REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+    dest = config.REPORTS_DIR / file.filename
+    content = await file.read()
+    dest.write_bytes(content)
+    return {"ok": True, "iso_week": stem, "file": file.filename, "size_bytes": len(content)}
 
 
 # Static dashboard

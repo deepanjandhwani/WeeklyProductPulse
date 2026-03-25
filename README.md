@@ -74,6 +74,8 @@ Workflow: `.github/workflows/scheduled-pulse.yml`
 | `GOOGLE_CLIENT_ID` | OAuth Desktop client ID |
 | `GOOGLE_CLIENT_SECRET` | OAuth Desktop client secret |
 | `GOOGLE_DOCS_MCP_TOKEN_JSON` | Full JSON from `~/.config/google-docs-mcp/token.json` (run `npx -y @a-bonus/google-docs-mcp auth` locally to generate) |
+| `RAILWAY_PUBLIC_URL` | Your Railway public URL, e.g. `https://weeklyproductpulse-production.up.railway.app` |
+| `PULSE_WEB_API_TOKEN` | Same token as Railway (protects the upload endpoint) |
 
 **Optional repository variables:**
 
@@ -82,7 +84,15 @@ Workflow: `.github/workflows/scheduled-pulse.yml`
 | `SCHEDULER_PHASE1_MODE` | `auto` | `auto` / `incremental` / `backfill` |
 | `SCHEDULER_SKIP_BACKFILL` | (unset) | Set `1` to skip Phase 1 if consolidated CSV exists |
 
-The workflow validates that `GROQ_API_KEY` and `GOOGLE_DOCS_DOCUMENT_ID` are set before running the pipeline.
+The workflow validates that `GROQ_API_KEY` and `GOOGLE_DOCS_DOCUMENT_ID` are set before running the pipeline. After a successful run, it pushes all `*_pulse.md` reports to Railway via `POST /api/reports/upload` so they appear on the Vercel dashboard.
+
+### Railway persistent volume (recommended)
+
+Reports uploaded to Railway are stored on the container filesystem. Without a volume, they are lost on each redeploy. To persist them:
+
+1. Railway dashboard → your service → **Settings → Volumes**
+2. Add a volume, mount path: `/app/data`
+3. Redeploy. Reports now survive container restarts and redeploys.
 
 ### Local development
 

@@ -106,6 +106,32 @@ jobs:
           SCHEDULER_PHASE1_MODE: ${{ github.event.inputs.phase1_mode || vars.SCHEDULER_PHASE1_MODE || 'auto' }}
         run: python -m scheduler
 
+      - name: Push reports to Railway backend
+        if: success()
+        shell: bash
+        env:
+          RAILWAY_URL: ${{ secrets.RAILWAY_PUBLIC_URL }}
+          PULSE_WEB_API_TOKEN: ${{ secrets.PULSE_WEB_API_TOKEN }}
+        run: |
+          if [[ -z "${RAILWAY_URL:-}" ]]; then
+            echo "::warning::RAILWAY_PUBLIC_URL secret not set — skipping report push to Railway."
+            exit 0
+          fi
+          for f in data/reports/*_pulse.md; do
+            [ -f "$f" ] || continue
+            echo "Uploading $(basename "$f") to ${RAILWAY_URL}..."
+            status=$(curl -s -o /dev/null -w "%{http_code}" \
+              -X POST "${RAILWAY_URL}/api/reports/upload" \
+              -H "X-Pulse-API-Token: ${PULSE_WEB_API_TOKEN:-}" \
+              -F "file=@${f}")
+            if [[ "$status" -ge 200 && "$status" -lt 300 ]]; then
+              echo "  ✓ $(basename "$f") uploaded (HTTP $status)"
+            else
+              echo "::error::Upload failed for $(basename "$f") — HTTP $status"
+              exit 1
+            fi
+          done
+
       - name: Upload reports artifact
         if: success()
         uses: actions/upload-artifact@v4
