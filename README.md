@@ -16,7 +16,7 @@ See `ARCHITECTURE.md` for full design details.
 |-----------|----------|------|
 | **Backend API + email** | Railway (Docker) | Hosts FastAPI app; serves report JSON and handles email sending |
 | **Frontend dashboard** | Vercel (static) | Serves HTML/CSS/JS; proxies `/api/*` requests to Railway |
-| **Scheduled pipeline** | GitHub Actions | Runs Phases 1–4 daily at 10:00 UTC; appends report to Google Docs |
+| **Scheduled pipeline** | GitHub Actions | Runs Phases 1–4 every Sunday 10:00 PM IST (16:30 UTC); appends report to Google Docs |
 | **Google Docs** | Google Workspace | Primary output; report appended automatically after each pipeline run |
 | **Email** | Gmail MCP (or SMTP) | Sent only when a user triggers it from the dashboard UI |
 
