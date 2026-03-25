@@ -11,7 +11,7 @@ name: Scheduled weekly pulse
 
 on:
   schedule:
-    - cron: "0 10 * * *" # 10:00 UTC daily — adjust for your timezone (see comment above)
+    - cron: "30 16 * * 0" # Every Sunday 10:00 PM IST (16:30 UTC)
   workflow_dispatch:
     inputs:
       phase1_mode:
