@@ -727,6 +727,57 @@ h1 {
   }
 }
 
+/* ─── Success popup ─── */
+.popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+  backdrop-filter: blur(3px);
+}
+
+.popup-overlay.hidden {
+  display: none;
+}
+
+.popup-card {
+  background: var(--bg-elevated);
+  border-radius: 16px;
+  padding: 2rem 2.25rem;
+  text-align: center;
+  max-width: 380px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+  animation: popIn 0.3s ease;
+}
+
+.popup-icon {
+  color: var(--success);
+  margin-bottom: 0.75rem;
+}
+
+.popup-title {
+  margin: 0 0 0.4rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.popup-detail {
+  margin: 0 0 1.25rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.popup-dismiss {
+  min-width: 120px;
+}
+
 /* ─── Animations ─── */
 @keyframes spin {
   to { transform: rotate(360deg); }
@@ -740,4 +791,14 @@ h1 {
 @keyframes slideIn {
   from { opacity: 0; transform: translateY(-6px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
 }

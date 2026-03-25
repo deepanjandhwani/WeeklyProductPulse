@@ -233,13 +233,26 @@ async function init() {
       }
       const weekLabel = formatWeekLabel(data.iso_week);
       const recipientList = (data.recipients || []).join(", ");
-      showStatus(`Report for ${weekLabel} sent to ${recipientList}`, "ok");
+      hideStatus();
+      showSuccessPopup(weekLabel, recipientList);
     } catch (e) {
       showStatus(e.message, "error");
     } finally {
       setEmailSendingState(false);
     }
   });
+}
+
+function showSuccessPopup(weekLabel, recipients) {
+  const overlay = $("#success-popup");
+  $("#popup-detail").textContent = `Report for ${weekLabel} was sent to ${recipients}`;
+  overlay.classList.remove("hidden");
+  const dismiss = $("#popup-dismiss");
+  dismiss.focus();
+  dismiss.onclick = () => overlay.classList.add("hidden");
+  overlay.onclick = (e) => {
+    if (e.target === overlay) overlay.classList.add("hidden");
+  };
 }
 
 function escapeHtml(s) {

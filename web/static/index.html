@@ -88,6 +88,16 @@
       <span>IndMoney Customer Voice</span>
     </footer>
   </div>
-  <script src="/assets/js/app.js?v=6" type="module"></script>
+  <div id="success-popup" class="popup-overlay hidden" role="dialog" aria-modal="true">
+    <div class="popup-card">
+      <div class="popup-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      </div>
+      <h3 class="popup-title">Email sent successfully</h3>
+      <p class="popup-detail" id="popup-detail"></p>
+      <button type="button" class="btn primary popup-dismiss" id="popup-dismiss">Done</button>
+    </div>
+  </div>
+  <script src="/assets/js/app.js?v=7" type="module"></script>
 </body>
 </html>
