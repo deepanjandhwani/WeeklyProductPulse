@@ -176,7 +176,7 @@ def run_weekly_pulse():
 |------|------|
 | **Phase 4 append** | [`shared/google_docs_client.py`](shared/google_docs_client.py) (`GOOGLE_DOCS_APPEND_TRANSPORT=direct` + service account) or [`shared/mcp_google_docs_append.py`](shared/mcp_google_docs_append.py) (`=mcp` + `npx @a-bonus/google-docs-mcp` + OAuth token). When append is explicitly requested (`--google-doc-append` / enabled path), failure is treated as run failure (not best-effort). See [docs/GOOGLE_DOCS.md](docs/GOOGLE_DOCS.md). |
 | **Cursor (IDE)** | [`.cursor/mcp.json`](.cursor/mcp.json) launches [`.cursor/google-docs-mcp.sh`](.cursor/google-docs-mcp.sh), which `source`s project `.env` so `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` reach the MCP server (plain `envFile` is unreliable in some clients). |
-| **Web UI + Email API** | [`web/main.py`](web/main.py) — FastAPI: `GET /api/reports/latest`, `POST /api/email/send` (full `*_pulse.md` as plain + HTML). Dashboard [`web/static/`](web/static/) accepts recipient emails in the UI (validated with Pydantic), includes in-flight sending feedback, and supports optional token-protected sends. Transport: `EMAIL_TRANSPORT=smtp` (default) or `EMAIL_TRANSPORT=mcp`. MCP mode uses [`shared/mcp_email_send.py`](shared/mcp_email_send.py) with strict response validation and fails the request when the MCP server reports send errors. |
+| **Web UI + Email API** | [`web/main.py`](web/main.py) — FastAPI: `GET /api/reports`, `POST /api/reports/upload`, `POST /api/email/send`. Dashboard [`web/static/`](web/static/) shows human-readable date ranges (e.g. "Mar 23 – 29, 2026") instead of ISO week codes, skeleton loading animation, contextual empty states, and a success popup modal after email delivery. Transport: `EMAIL_TRANSPORT=smtp` (default) or `EMAIL_TRANSPORT=mcp`. MCP mode uses [`shared/mcp_email_send.py`](shared/mcp_email_send.py) with strict response validation. |
 | **Auto-email after run** | If `EMAIL_REPORT_AFTER_PIPELINE=true`, [`scheduler/run_pipeline.py`](scheduler/run_pipeline.py) calls the same mailer after Phase 4 using configured transport (`smtp` or `mcp`). |
 
 GitHub Actions **minimum** schedule interval is **5 minutes**; production runs **weekly on Sunday 10:00 PM IST** (see [docs/SCHEDULER.md](docs/SCHEDULER.md)).
@@ -1247,4 +1247,4 @@ gantt
 
 ---
 
-*Document updated 2026-03-24 — v1.8 adds CI→Railway report upload, Vercel static deploy, weekly Sunday 10:00 PM IST schedule, and `entrypoint.sh` for writing MCP OAuth files from env vars on Railway.*
+*Document updated 2026-03-25 — v1.8 adds CI→Railway report upload, Vercel static deploy, weekly Sunday 10:00 PM IST schedule, `entrypoint.sh` for MCP OAuth on Railway, and UI overhaul (human-readable dates, skeleton loading, success popup, polished design).*

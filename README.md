@@ -6,7 +6,7 @@ WeeklyProductPulse is an end-to-end Voice-of-Customer pipeline for IndMoney Play
 - Clusters themes (Phase 2), extracts insights/quotes (Phase 3), generates weekly report (Phase 4)
 - Appends report to Google Docs via MCP (mandatory in scheduled runs)
 - Supports email delivery via SMTP or MCP (Gmail MCP)
-- Includes FastAPI dashboard for viewing reports and sending emails on-demand
+- Includes a polished dashboard for viewing reports and emailing them to your team
 
 See `ARCHITECTURE.md` for full design details.
 
@@ -15,7 +15,7 @@ See `ARCHITECTURE.md` for full design details.
 | Component | Platform | Role |
 |-----------|----------|------|
 | **Backend API + email** | Railway (Docker) | Hosts FastAPI app; serves report JSON and handles email sending |
-| **Frontend dashboard** | Vercel (static) | Serves HTML/CSS/JS; proxies `/api/*` requests to Railway |
+| **Frontend dashboard** | Vercel (static) | Serves the UI with human-readable date ranges, skeleton loading, and email success popup; proxies `/api/*` to Railway |
 | **Scheduled pipeline** | GitHub Actions | Runs Phases 1–4 every Sunday 10:00 PM IST (16:30 UTC); appends report to Google Docs |
 | **Google Docs** | Google Workspace | Primary output; report appended automatically after each pipeline run |
 | **Email** | Gmail MCP (or SMTP) | Sent only when a user triggers it from the dashboard UI |
@@ -167,4 +167,5 @@ Each environment reads its own source. **They do not share config automatically.
 - `scripts/run_e2e.sh` uses safe `.env` parsing (handles values with spaces).
 - If Google Docs append is requested but fails, Phase 4 fails by design (mandatory).
 - Email is sent only from the UI (not auto-sent by the pipeline unless `EMAIL_REPORT_AFTER_PIPELINE=true`).
+- The dashboard shows human-readable date ranges (e.g. "Mar 23 – 29, 2026") instead of ISO week codes, with skeleton loading animations and a success popup after email delivery.
 - `groq>=0.13.1` is required for compatibility with `httpx>=0.28` (older versions crash on empty API keys).
