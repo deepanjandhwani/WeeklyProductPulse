@@ -425,94 +425,253 @@ body {
   color: var(--text-tertiary);
 }
 
-/* ─── Prose (report body) ─── */
+/* ─── Prose (report body — premium analyst report) ─── */
+
 .prose h1 {
-  font-size: clamp(1.5rem, 3vw, 1.75rem);
-  font-weight: 600;
-  letter-spacing: -0.035em;
-  line-height: 1.15;
-  margin: 0 0 1rem;
+  font-size: clamp(1.5rem, 3vw, 1.875rem);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.12;
+  margin: 0 0 0.25rem;
   color: var(--text);
+}
+
+.prose h1 + h2 {
+  margin-top: 0;
+  border-bottom: none;
+  padding-bottom: 0;
+  font-size: 0.9375rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: -0.01em;
+  color: var(--text-tertiary);
 }
 
 .prose h2 {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--text-tertiary);
-  margin: 2rem 0 0.75rem;
-  padding-bottom: 0.35rem;
-  border-bottom: 1px solid var(--border-hairline);
+  color: var(--accent);
+  margin: 2.5rem 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
 }
 
-.prose h3,
-.prose h4 {
-  font-size: 1.0625rem;
+.prose h3 {
+  font-size: 1.1875rem;
   font-weight: 600;
-  letter-spacing: -0.022em;
-  margin: 1.25rem 0 0.5rem;
+  letter-spacing: -0.025em;
+  margin: 2rem 0 0.75rem;
   color: var(--text);
+  line-height: 1.25;
+}
+
+.prose h3 + p {
+  margin-top: 0;
 }
 
 .prose p {
-  margin: 0.65rem 0;
+  margin: 0.75rem 0;
   color: var(--text-secondary);
-  font-size: 1.0625rem;
-  line-height: 1.5;
-  letter-spacing: -0.015em;
-}
-
-.prose blockquote {
-  margin: 1rem 0;
-  padding: 1rem 1.15rem;
-  border-left: 3px solid var(--accent);
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  background: var(--surface-subtle);
-  color: var(--text-secondary);
-  font-style: normal;
   font-size: 1rem;
-  line-height: 1.5;
+  line-height: 1.58;
+  letter-spacing: -0.012em;
 }
 
-.prose ul,
-.prose ol {
-  margin: 0.5rem 0 0.75rem 1.25rem;
-  padding: 0;
+/* ─── Theme cards ─── */
+.theme-card {
+  margin: 1.75rem 0 0.75rem;
+  padding: 1rem 1.15rem;
+  background: linear-gradient(135deg, #f5f5f7 0%, #fafafe 100%);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
 }
 
-.prose li {
-  margin: 0.4rem 0;
-  color: var(--text-secondary);
+.theme-header {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.theme-rank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.theme-name {
   font-size: 1.0625rem;
-  line-height: 1.5;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text);
 }
 
-.prose h4 {
-  background: transparent;
-  border: none;
-  border-left: none;
+.theme-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+}
+
+.theme-stats .stat {
+  font-size: 0.8125rem;
+  color: var(--text-tertiary);
+  letter-spacing: -0.01em;
+}
+
+.theme-stats .stat strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* ─── User quotes ─── */
+.prose blockquote {
+  position: relative;
+  margin: 0.75rem 0 1rem;
+  padding: 1rem 1.25rem 1rem 1.35rem;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-style: italic;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+.prose blockquote::before {
+  content: "\201C";
+  position: absolute;
+  top: 0.25rem;
+  left: 0.45rem;
+  font-size: 2.25rem;
+  line-height: 1;
+  color: var(--accent);
+  opacity: 0.3;
+  font-style: normal;
+}
+
+.prose blockquote p {
+  margin: 0;
+  color: inherit;
+  font-size: inherit;
+}
+
+/* ─── Analyst insights (paragraph after quote) ─── */
+.prose blockquote + p {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-top: 0.5rem;
+}
+
+/* ─── Action items (numbered list) ─── */
+.prose ol {
+  list-style: none;
+  counter-reset: action-counter;
+  margin: 0.75rem 0 1rem;
   padding: 0;
-  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .prose ol li {
-  background: transparent;
-  border: none;
-  padding: 0.25rem 0;
-  border-radius: 0;
+  counter-increment: action-counter;
+  position: relative;
+  padding: 1rem 1.15rem 1rem 3.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-md);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.prose ol li::before {
+  content: counter(action-counter);
+  position: absolute;
+  left: 1rem;
+  top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.prose ol li strong {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* ─── Unordered lists (fee context, etc.) ─── */
+.prose ul {
+  margin: 0.65rem 0 0.85rem;
+  padding: 0 0 0 1.35rem;
+  list-style: none;
+}
+
+.prose ul li {
+  position: relative;
+  margin: 0.5rem 0;
+  padding-left: 0.15rem;
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+.prose ul li::before {
+  content: "";
+  position: absolute;
+  left: -1rem;
+  top: 0.55rem;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0.5;
 }
 
 .prose hr {
   border: none;
   height: 1px;
   background: var(--border-hairline);
-  margin: 2rem 0;
+  margin: 2.5rem 0 1rem;
+}
+
+.prose em {
+  font-style: italic;
+  color: var(--text-tertiary);
+  font-size: 0.8125rem;
+  letter-spacing: -0.005em;
 }
 
 .prose code {
   font-family: var(--mono);
-  font-size: 0.9em;
+  font-size: 0.88em;
   background: var(--surface-subtle);
   padding: 0.15em 0.4em;
   border-radius: 4px;
@@ -521,6 +680,7 @@ body {
 .prose a {
   color: var(--accent);
   text-decoration: none;
+  font-weight: 500;
 }
 
 .prose a:hover {
@@ -530,6 +690,18 @@ body {
 .prose strong {
   color: var(--text);
   font-weight: 600;
+}
+
+/* ─── Report footer (generated on…) ─── */
+.prose hr + p > em,
+.prose > p:last-child > em {
+  display: block;
+  text-align: center;
+  margin-top: 0.5rem;
+  padding: 0.75rem 0;
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  letter-spacing: 0.01em;
 }
 
 /* ─── Share section ─── */
@@ -749,7 +921,19 @@ body {
 
   .prose p,
   .prose li {
-    font-size: 1rem;
+    font-size: 0.9375rem;
+  }
+
+  .theme-card {
+    padding: 0.85rem 1rem;
+  }
+
+  .prose ol li {
+    padding-left: 2.75rem;
+  }
+
+  .prose ol li::before {
+    left: 0.75rem;
   }
 }
 

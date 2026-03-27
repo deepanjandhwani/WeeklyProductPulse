@@ -35,8 +35,18 @@ def _recipients_from_env() -> list[str]:
 
 
 def markdown_to_html(md: str) -> str:
-    """Convert Markdown to a minimal HTML fragment (tables supported via extra)."""
-    return markdown.markdown(md, extensions=["extra"])
+    """Convert Markdown to a styled HTML fragment (tables supported via extra)."""
+    html = markdown.markdown(md, extensions=["extra"])
+    html = re.sub(
+        r"<h4>(\d+)\.\s*(.*?)\s*\((\d+)\s*reviews\s*·\s*([\d.]+%)\s*·\s*★([\d.]+)\)</h4>",
+        r'<div class="theme-card"><div class="theme-header"><span class="theme-rank">\1</span>'
+        r'<span class="theme-name">\2</span></div>'
+        r'<div class="theme-stats"><span class="stat"><strong>\3</strong> reviews</span>'
+        r'<span class="stat"><strong>\4</strong> share</span>'
+        r'<span class="stat"><strong>★\5</strong> avg</span></div></div>',
+        html,
+    )
+    return html
 
 
 def _display_name_from_email(email: str) -> str:
