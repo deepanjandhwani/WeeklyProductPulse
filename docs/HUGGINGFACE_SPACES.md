@@ -18,16 +18,40 @@ Use this for **short demos**. Free Spaces may **sleep** after inactivity (first 
 6. **Visibility:** **Public** (simplest for Vercel + browser demos) or **Private** (then you must handle auth yourself).
 7. Click **Create Space**.
 
-## Step 2 — Connect your GitHub repository
+## Step 2 — Get your code onto the Space (there is no “GitHub connect” button)
 
-1. In the Space → **Settings** → **Repository**.
-2. Connect **GitHub** and select the repo that contains this app.
-3. Set **Branch** to `main` (or your default branch).
+Unlike Vercel/Railway, a Space **is** a Git repository on Hugging Face. It does **not** have **Settings → connect Repository + branch**. You upload code by **git push** to the Hub (or sync from GitHub with Actions).
 
-**Monorepo note:** Hugging Face builds from the **repository root**. Your `Dockerfile` must live at the root of the linked repo. If your app lives in a subfolder, either:
+### Option A — Push from your laptop (simplest for demos)
 
-- move/copy the `Dockerfile` (and build context) to the repo root, or  
-- use a dedicated small repo that only contains this app folder.
+1. On the Space page, open the **⋮** menu (top right) → **Clone repository** (or use the clone URL from the Space files tab).
+2. You get a remote like `https://huggingface.co/spaces/YOUR_USER/YOUR_SPACE_NAME`.
+3. On your machine, from a folder that has your app at the **repo root** (with `Dockerfile` next to `requirements.txt`):
+
+```bash
+cd /path/to/WeeklyProductPulse   # folder that contains Dockerfile, web/, etc.
+
+git init
+git remote add space https://huggingface.co/spaces/YOUR_USER/YOUR_SPACE_NAME
+# Use a token as password: https://huggingface.co/settings/tokens
+git add .
+git commit -m "Initial Space deploy"
+git push -u space main
+```
+
+If the Space already has a commit (e.g. README), use:
+
+```bash
+git pull space main --allow-unrelated-histories
+# resolve if needed, then:
+git push space main
+```
+
+### Option B — Keep GitHub as source of truth (CI sync)
+
+Use a GitHub Action that pushes `main` to the Space on every push. See Hugging Face docs: [Managing Spaces with GitHub Actions](https://huggingface.co/docs/hub/spaces-github-actions).
+
+**Monorepo note:** The Space build context is whatever you push to the Space repo. The `Dockerfile` must be at the **root of what you push**. If your GitHub app lives in a subfolder, either push only that folder’s contents to the Space remote, or add a thin root `Dockerfile` that `COPY`s from the subfolder.
 
 ## Step 3 — Space README (optional but nice)
 
@@ -54,9 +78,9 @@ Spaces set **`PORT=7860`** for Docker. This project’s `entrypoint.sh` runs:
 
 So on HF you **do not** need to change code — Uvicorn listens on **7860** automatically.
 
-## Step 5 — Variables & secrets (Space settings)
+## Step 5 — Variables & secrets
 
-In the Space → **Settings** → **Variables and secrets**, add the same kinds of values you use on Railway (names only; paste real values in the UI):
+In the Space → **Settings** tab → scroll to **Variables and secrets** (not “Repository” — that section does not exist for linking GitHub). Add the same kinds of values you use on Railway (names only; paste real values in the UI):
 
 **Minimum for “report viewer” demo**
 
