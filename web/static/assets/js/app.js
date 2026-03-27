@@ -35,6 +35,47 @@ function formatWeekLabel(isoWeek) {
   return isoWeekToDateRange(isoWeek);
 }
 
+/** ISO-8601 week string for a date (YYYY-Wnn), matches server report filenames. */
+function toIsoWeekString(date = new Date()) {
+  const target = new Date(date.valueOf());
+  const dayNr = (date.getDay() + 6) % 7;
+  target.setDate(target.getDate() - dayNr + 3);
+  const firstThursday = target.valueOf();
+  target.setMonth(0, 1);
+  if (target.getDay() !== 4) {
+    target.setMonth(0, 1 + ((4 - target.getDay() + 7) % 7));
+  }
+  const week = 1 + Math.round((firstThursday - target.valueOf()) / 604800000);
+  const isoYear = target.getFullYear();
+  return `${isoYear}-W${String(week).padStart(2, "0")}`;
+}
+
+function compareIsoWeek(a, b) {
+  const ma = a.match(/^(\d{4})-W(\d{2})$/);
+  const mb = b.match(/^(\d{4})-W(\d{2})$/);
+  if (!ma || !mb) return 0;
+  const ya = parseInt(ma[1], 10);
+  const yb = parseInt(mb[1], 10);
+  if (ya !== yb) return ya - yb;
+  return parseInt(ma[2], 10) - parseInt(mb[2], 10);
+}
+
+/**
+ * Prefer the report for the current ISO week if it exists; otherwise the newest
+ * report whose week is not after the current week; else the newest file (edge cases).
+ */
+function preferredIsoWeekFromList(weeks) {
+  if (!weeks.length) return null;
+  const ids = weeks.map((r) => r.iso_week);
+  const current = toIsoWeekString(new Date());
+  if (ids.includes(current)) return current;
+  let best = null;
+  for (const iso of ids) {
+    if (compareIsoWeek(iso, current) <= 0) best = iso;
+  }
+  return best || ids[ids.length - 1];
+}
+
 function showStatus(message, kind = "ok") {
   const el = $("#status");
   el.textContent = message;
@@ -75,8 +116,9 @@ function setLoadingState(isLoading) {
   }
 }
 
-async function fetchJson(url, options) {
-  const res = await fetch(url, options);
+async function fetchJson(url, options = {}) {
+  const { cache = "default", ...fetchOpts } = options;
+  const res = await fetch(url, { ...fetchOpts, cache });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     const detail = data.detail || res.statusText;
@@ -85,8 +127,10 @@ async function fetchJson(url, options) {
   return data;
 }
 
-async function loadReportList() {
-  const data = await fetchJson("/api/reports");
+async function loadReportList(options = {}) {
+  const { bustCache = false } = options;
+  const url = bustCache ? `/api/reports?_=${Date.now()}` : "/api/reports";
+  const data = await fetchJson(url, bustCache ? { cache: "no-store" } : {});
   const sel = $("#week-select");
   sel.innerHTML = "";
   const weeks = data.reports || [];
@@ -96,17 +140,22 @@ async function loadReportList() {
     opt.textContent = formatWeekLabel(r.iso_week);
     sel.appendChild(opt);
   }
-  if (weeks.length) {
-    sel.value = weeks[weeks.length - 1].iso_week;
+  const preferred = preferredIsoWeekFromList(weeks);
+  if (preferred) {
+    sel.value = preferred;
   }
-  return weeks.length ? weeks[weeks.length - 1].iso_week : null;
+  return preferred;
 }
 
-async function loadReport(isoWeek) {
+async function loadReport(isoWeek, options = {}) {
+  const { bustCache = false } = options;
   setLoadingState(true);
   try {
-    const endpoint = isoWeek ? `/api/reports/${encodeURIComponent(isoWeek)}` : "/api/reports/latest";
-    const data = await fetchJson(endpoint);
+    let endpoint = isoWeek ? `/api/reports/${encodeURIComponent(isoWeek)}` : "/api/reports/latest";
+    if (bustCache) {
+      endpoint += endpoint.includes("?") ? `&_=${Date.now()}` : `?_=${Date.now()}`;
+    }
+    const data = await fetchJson(endpoint, bustCache ? { cache: "no-store" } : {});
     const dateRange = formatWeekLabel(data.iso_week);
     $("#meta-week").textContent = dateRange;
     $("#meta-status").textContent = "Report ready";
@@ -173,10 +222,35 @@ async function init() {
 
   $("#btn-refresh").addEventListener("click", async () => {
     try {
-      const latest = await loadReportList();
-      if (latest) {
-        await loadReport(latest);
-        showStatus("Report refreshed.", "ok");
+      const preferred = await loadReportList({ bustCache: true });
+      if (preferred) {
+        await loadReport(preferred, { bustCache: true });
+        const cur = toIsoWeekString(new Date());
+        const label =
+          preferred === cur
+            ? "Latest data loaded for this week."
+            : "Latest available report loaded (through " + formatWeekLabel(preferred) + ").";
+        showStatus(label, "ok");
+      } else {
+        setLoadingState(false);
+        $("#meta-week").textContent = "—";
+        $("#meta-status").textContent = "No reports yet";
+        $("#meta-status").className = "meta-badge meta-badge--muted";
+        $("#report").innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+          </div>
+          <h3>No reports available yet</h3>
+          <p>Reports are generated automatically every Sunday evening. Once the first pipeline run completes, your weekly pulse will appear here.</p>
+        </div>`;
+        showStatus("No reports on the server yet.", "ok");
       }
     } catch (e) {
       showStatus(e.message, "error");
