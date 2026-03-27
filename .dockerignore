@@ -14,5 +14,6 @@ __pycache__
 logs
 data/cache
 data/tagged
-data/reports
 data/consolidated
+# Keep *_pulse.md in image (tracked in git); omit large JSON payloads from build context
+data/reports/*.json
