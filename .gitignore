@@ -22,7 +22,9 @@ ENV/
 data/cache/
 data/consolidated/
 data/tagged/
-data/reports/
+data/reports/*.json
+# Pulse Markdown reports are committed by CI so they survive on diskless hosts
+!data/reports/*_pulse.md
 
 # ── Log files ─────────────────────────────────────────────────────────────────
 logs/
