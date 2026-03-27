@@ -15,7 +15,7 @@ See `ARCHITECTURE.md` for full design details.
 | Component | Platform | Role |
 |-----------|----------|------|
 | **Backend API + email** | Railway (Docker) | Hosts FastAPI app; serves report JSON and handles email sending |
-| **Frontend dashboard** | Vercel (static) | Serves the UI with human-readable date ranges, skeleton loading, and email success popup; proxies `/api/*` to Railway |
+| **Frontend dashboard** | Vercel (Next.js in `frontend/`) | Modern UI (Figtree + Newsreader, DOMPurify, ambient hero); `next.config` rewrites `/api/*` to your backend (Render/Railway/local) |
 | **Scheduled pipeline** | GitHub Actions | Runs Phases 1–4 every Sunday 10:00 PM IST (16:30 UTC); appends report to Google Docs |
 | **Google Docs** | Google Workspace | Primary output; report appended automatically after each pipeline run |
 | **Email** | Gmail MCP (or SMTP) | Sent only when a user triggers it from the dashboard UI |
@@ -50,17 +50,15 @@ See `ARCHITECTURE.md` for full design details.
 5. Generate a public domain under Railway → Networking → Public Networking.
 6. Verify: `https://<railway-domain>/api/reports`
 
-### Vercel (frontend)
+### Vercel (frontend — Next.js)
 
 1. Go to [vercel.com](https://vercel.com) and import your GitHub repo.
-2. Set **Root Directory** to `WeeklyProductPulse`.
-3. Framework Preset: **Other** (no framework — it's plain static HTML).
-4. Build & Output settings should auto-detect from `vercel.json`:
-   - Build Command: (leave empty / none)
-   - Output Directory: `web/static`
-5. **Before deploying**, edit `vercel.json` and replace `REPLACE_WITH_YOUR_RAILWAY_DOMAIN` with your actual Railway public domain (e.g. `weeklyproductpulse-production-xxxx.up.railway.app`).
-6. Optionally add Railway CORS: in Railway Variables, set `PULSE_WEB_CORS_ORIGINS=https://your-vercel-domain.vercel.app` (allows direct API calls as a fallback).
-7. Deploy. The Vercel URL will serve the dashboard and proxy all `/api/*` calls to Railway.
+2. Set **Root Directory** to `frontend` (the folder that contains `package.json` and `next.config.ts`). If your repo nests the app deeper, choose the path that ends at that folder (e.g. `WeeklyProductPulse/frontend`).
+3. Framework Preset: **Next.js** (auto-detected). Build command: `npm run build`, output: Next default.
+4. In Vercel → **Settings → Environment Variables**, set **`PULSE_API_UPSTREAM`** to your backend origin **without** a trailing slash (e.g. `https://weeklyproductpulse.onrender.com`). This value is baked into rewrites at build time. The default in `next.config.ts` matches Render if you omit it.
+5. Optionally set the same URL locally in `frontend/.env.local` for `next dev`.
+6. On the backend (Render/Railway), set **`PULSE_WEB_CORS_ORIGINS`** to your Vercel URL if you ever call the API directly from the browser without rewrites.
+7. Deploy. All requests from the dashboard to `/api/...` are proxied to `PULSE_API_UPSTREAM`.
 
 ### GitHub Actions (scheduled pipeline)
 
@@ -86,7 +84,7 @@ Workflow: `.github/workflows/scheduled-pulse.yml`
 | `SCHEDULER_PHASE1_MODE` | `auto` | `auto` / `incremental` / `backfill` |
 | `SCHEDULER_SKIP_BACKFILL` | (unset) | Set `1` to skip Phase 1 if consolidated CSV exists |
 
-The workflow validates that `GROQ_API_KEY` and `GOOGLE_DOCS_DOCUMENT_ID` are set before running the pipeline. After a successful run, it pushes all `*_pulse.md` reports to Railway via `POST /api/reports/upload` so they appear on the Vercel dashboard.
+The workflow validates that `GROQ_API_KEY` and `GOOGLE_DOCS_DOCUMENT_ID` are set before running the pipeline. After a successful run, it **commits** generated `*_pulse.md` files to the repo (with `[skip ci]`) so the next backend deploy includes them; `POST /api/reports/upload` remains optional for manual pushes.
 
 ### Railway persistent volume (recommended)
 
@@ -107,11 +105,22 @@ cp .env.example .env
 # Fill .env with real values
 ```
 
-Start web app:
+Start the **API** (reports + email):
 
 ```bash
 .venv/bin/uvicorn web.main:app --reload --host 0.0.0.0 --port 8000
 ```
+
+Start the **Next.js dashboard** (optional; uses API via rewrites):
+
+```bash
+cd frontend
+cp .env.example .env.local   # set PULSE_API_UPSTREAM=http://127.0.0.1:8000
+npm install
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000). The FastAPI app still serves the legacy static UI at `/` when you use Uvicorn only.
 
 Run full pipeline:
 

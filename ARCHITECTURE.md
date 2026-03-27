@@ -3,7 +3,7 @@
 > **Product**: IndMoney Play Store Review Intelligence  
 > **Author**: Senior AI Product Manager  
 > **Date**: 24 March 2026  
-> **Version**: 1.8
+> **Version**: 1.9
 
 ---
 
@@ -11,7 +11,7 @@
 
 WeeklyProductPulse is an automated pipeline that scrapes recent IndMoney Play Store reviews from a configurable lookback window (default 12 weeks), clusters them into themes, and produces a concise, PII-free weekly intelligence note — complete with user quotes and actionable recommendations. The system uses **free-tier LLM options** (Groq Llama 3.3 70B by default; Gemini optional per phase via config/env) with chunking and caching controls for rate limits.
 
-**Distribution & operations (v1.6+):** Outputs can be pushed to **Google Docs** (REST API with a service account, or **OAuth + MCP** via `@a-bonus/google-docs-mcp` from Python or Cursor). A **FastAPI** dashboard (`web/main.py`) serves the latest pulse in the browser and can email participants via **SMTP (default)** or **MCP email transport** (`EMAIL_TRANSPORT=mcp`). MCP email uses schema-compliant tool arguments and treats MCP text error payloads as hard failures (no silent "success"). Deployment runs on **Railway** (Docker container) for the backend API and **Vercel** for the static frontend dashboard (with API rewrites proxying `/api/*` to Railway). **GitHub Actions** handles the scheduled pipeline. The CI workflow validates required secrets (`GROQ_API_KEY`, `GOOGLE_DOCS_DOCUMENT_ID`) before running and writes `GOOGLE_DOCS_MCP_TOKEN_JSON` to disk for MCP append. Email is sent only on-demand from the UI (not auto-sent after pipeline runs). After each successful pipeline run, GitHub Actions pushes generated `*_pulse.md` reports to Railway via `POST /api/reports/upload` so the Vercel dashboard can display them immediately. A Railway persistent volume on `/app/data` is recommended so reports survive container redeploys.
+**Distribution & operations (v1.6+):** Outputs can be pushed to **Google Docs** (REST API with a service account, or **OAuth + MCP** via `@a-bonus/google-docs-mcp` from Python or Cursor). A **FastAPI** app (`web/main.py`) exposes the report and email APIs and can still serve a legacy static tree under `web/static/`. The **primary production dashboard** is a **Next.js** app in `frontend/` (deployed on **Vercel**): App Router, **Figtree** + **Newsreader** typography, DOMPurify-sanitized report HTML, ambient hero treatment, and the same week-selection / refresh / email flows. Next.js `rewrites` proxy `/api/*` to the backend (`PULSE_API_UPSTREAM`, default Render URL). Email uses **SMTP (default)** or **MCP email transport** (`EMAIL_TRANSPORT=mcp`); MCP email uses schema-compliant tool arguments and treats MCP text error payloads as hard failures. **GitHub Actions** runs the scheduled pipeline; CI validates required secrets and writes `GOOGLE_DOCS_MCP_TOKEN_JSON` for MCP append. Email is only sent on-demand from the UI. After each successful run, CI **commits** generated `*_pulse.md` files to the repo so the next Docker deploy (e.g. Render) bakes reports into the image; optional `POST /api/reports/upload` remains for ad-hoc pushes.
 
 ---
 
@@ -176,7 +176,7 @@ def run_weekly_pulse():
 |------|------|
 | **Phase 4 append** | [`shared/google_docs_client.py`](shared/google_docs_client.py) (`GOOGLE_DOCS_APPEND_TRANSPORT=direct` + service account) or [`shared/mcp_google_docs_append.py`](shared/mcp_google_docs_append.py) (`=mcp` + `npx @a-bonus/google-docs-mcp` + OAuth token). When append is explicitly requested (`--google-doc-append` / enabled path), failure is treated as run failure (not best-effort). See [docs/GOOGLE_DOCS.md](docs/GOOGLE_DOCS.md). |
 | **Cursor (IDE)** | [`.cursor/mcp.json`](.cursor/mcp.json) launches [`.cursor/google-docs-mcp.sh`](.cursor/google-docs-mcp.sh), which `source`s project `.env` so `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` reach the MCP server (plain `envFile` is unreliable in some clients). |
-| **Web UI + Email API** | [`web/main.py`](web/main.py) — FastAPI: `GET /api/reports`, `POST /api/reports/upload`, `POST /api/email/send`. Dashboard [`web/static/`](web/static/) shows human-readable date ranges (e.g. "Mar 23 – 29, 2026") instead of ISO week codes, skeleton loading animation, contextual empty states, and a success popup modal after email delivery. Transport: `EMAIL_TRANSPORT=smtp` (default) or `EMAIL_TRANSPORT=mcp`. MCP mode uses [`shared/mcp_email_send.py`](shared/mcp_email_send.py) with strict response validation. |
+| **Web UI + Email API** | [`web/main.py`](web/main.py) — FastAPI: `GET /api/reports`, `POST /api/reports/upload`, `POST /api/email/send`. **Production UI:** [`frontend/`](frontend/) — Next.js (Vercel): human-readable date ranges, skeleton loading, empty/error states, email success modal, refresh with cache-bust + current-ISO-week preference, DOMPurify on report HTML. **Legacy static** [`web/static/`](web/static/) remains for Docker-only serving. Transport: `EMAIL_TRANSPORT=smtp` (default) or `EMAIL_TRANSPORT=mcp`. MCP mode uses [`shared/mcp_email_send.py`](shared/mcp_email_send.py) with strict response validation. |
 | **Auto-email after run** | If `EMAIL_REPORT_AFTER_PIPELINE=true`, [`scheduler/run_pipeline.py`](scheduler/run_pipeline.py) calls the same mailer after Phase 4 using configured transport (`smtp` or `mcp`). |
 
 GitHub Actions **minimum** schedule interval is **5 minutes**; production runs **weekly on Sunday 10:00 PM IST** (see [docs/SCHEDULER.md](docs/SCHEDULER.md)).
@@ -1152,12 +1152,12 @@ def retry_with_backoff(max_retries=3, base_delay=2):
 | **Fuzzy matching**      | `thefuzz` (fuzzywuzzy)    | 0.20+   | MIT        |
 | **Logging**             | Python `logging` (stdlib) | —       | Built-in   |
 | **Scheduling**          | GitHub Actions / cron / `python -m scheduler` | — | Free |
-| **Web dashboard**       | FastAPI + Uvicorn         | 0.115+  | MIT        |
+| **Web dashboard**       | FastAPI + Uvicorn (API); Next.js App Router + React 19 (primary UI in `frontend/`) | 0.115+ / 16.x | MIT |
 | **Email (reports)**     | `smtplib` + Markdown→HTML | stdlib  | —          |
 | **Google Docs (MCP)**   | `@a-bonus/google-docs-mcp` via `npx`, `mcp` Python pkg | — | MIT |
 | **Email transport**     | `smtplib` (SMTP) or MCP email server via `mcp` + `npx` | — | — |
 | **Container runtime**   | Docker (`Dockerfile` + `entrypoint.sh` + `.dockerignore`) for Railway deploys | — | — |
-| **Frontend hosting**    | Vercel (static deploy from `web/static/` via `vercel.json`) | — | Free |
+| **Frontend hosting**    | Vercel — **Next.js** app from `frontend/` (set project Root Directory to `frontend`; `next.config.ts` rewrites `/api/*` to backend) | — | Free |
 | **Config**              | `python-dotenv`           | —       | BSD        |
 | **HTTP client**         | Stdlib + SDK clients used per integration | — | — |
 
@@ -1247,4 +1247,4 @@ gantt
 
 ---
 
-*Document updated 2026-03-25 — v1.8 adds CI→Railway report upload, Vercel static deploy, weekly Sunday 10:00 PM IST schedule, `entrypoint.sh` for MCP OAuth on Railway, and UI overhaul (human-readable dates, skeleton loading, success popup, polished design).*
+*Document updated 2026-03-28 — v1.9 adds Next.js dashboard (`frontend/`) as the primary Vercel UI (typography, DOMPurify, API rewrites via `PULSE_API_UPSTREAM`); v1.8 covered CI report commits, weekly Sunday 10:00 PM IST schedule, `entrypoint.sh`, and the earlier static UI overhaul.*
