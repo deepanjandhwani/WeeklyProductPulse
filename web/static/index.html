@@ -2,42 +2,47 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Weekly Product Pulse — IndMoney</title>
   <meta name="description" content="Weekly Play Store review intelligence for IndMoney" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/assets/css/app.css?v=6" />
+  <link rel="stylesheet" href="/assets/css/app.css?v=8" />
 </head>
 <body>
+  <a class="skip-link" href="#report">Skip to report</a>
+
+  <header class="site-nav">
+    <div class="site-nav__inner">
+      <div class="site-nav__brand">
+        <img class="site-nav__logo" src="/assets/images/indmoney-logo.png" alt="" width="28" height="28" onerror="this.style.display='none'" />
+        <span class="site-nav__name">IndMoney</span>
+      </div>
+      <span class="site-nav__product">Product Pulse</span>
+    </div>
+  </header>
+
+  <section class="hero" aria-labelledby="hero-title">
+    <p class="hero__eyebrow">Customer voice</p>
+    <h1 id="hero-title" class="hero__title">Weekly Product Pulse</h1>
+    <p class="hero__subtitle">Play Store intelligence from a rolling twelve-week window — refreshed every week.</p>
+  </section>
+
   <div class="layout">
-    <header class="top">
-      <div class="brand">
-        <img class="brand-logo" src="/assets/images/indmoney-logo.png" alt="IndMoney logo" onerror="this.style.display='none'" />
-        <div>
-          <p class="brand-kicker">IndMoney</p>
-          <h1>Weekly Product Pulse</h1>
-          <p class="tagline">Play Store review intelligence, updated every week</p>
-        </div>
+    <div class="toolbar" role="group" aria-label="Report controls">
+      <div class="toolbar__group">
+        <label class="toolbar__label" for="week-select">Period</label>
+        <select id="week-select" class="toolbar__select" aria-label="Select report week"></select>
       </div>
-      <div class="actions">
-        <label class="field-label" for="week-select">Select week</label>
-        <select id="week-select" aria-label="Select report week"></select>
-        <button type="button" id="btn-refresh" class="btn secondary" aria-label="Refresh report">
-          <svg class="btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-          Refresh
-        </button>
-      </div>
-    </header>
+      <button type="button" id="btn-refresh" class="btn btn--ghost" aria-label="Refresh report">
+        <svg class="btn__icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        Refresh
+      </button>
+    </div>
 
     <aside class="meta" id="meta-panel">
-      <div class="meta-row">
-        <span class="label">Viewing</span>
-        <strong id="meta-week">—</strong>
-      </div>
-      <div class="meta-row">
-        <span id="meta-status" class="meta-badge empty">Loading…</span>
+      <div class="meta__inner">
+        <span class="meta__label">Viewing</span>
+        <span class="meta__value" id="meta-week">—</span>
+        <span id="meta-status" class="meta-badge meta-badge--muted">Loading…</span>
       </div>
     </aside>
 
@@ -54,50 +59,47 @@
       </article>
     </main>
 
-    <section class="email-panel" aria-labelledby="email-panel-title">
-      <div class="email-panel-header">
-        <svg class="email-panel-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-        <h2 id="email-panel-title" class="email-panel-title">Share this report</h2>
-      </div>
-      <p class="email-panel-hint">
-        Send the full weekly pulse to your team. Enter email addresses separated by commas.
-      </p>
-      <label for="email-recipients">Recipients</label>
-      <textarea
-        id="email-recipients"
-        rows="2"
-        autocomplete="email"
-        placeholder="name@company.com, team-lead@company.com"
-        spellcheck="false"
-      ></textarea>
-      <details class="advanced-settings">
-        <summary>Advanced settings</summary>
-        <div class="email-panel-row">
-          <label for="api-token" class="label-optional">API token</label>
-          <input type="password" id="api-token" autocomplete="off" placeholder="Enter token if required" />
+    <section class="share-section" aria-labelledby="email-panel-title">
+      <h2 id="email-panel-title" class="section-heading">Share</h2>
+      <p class="section-lead">Send the full pulse to your team in one step.</p>
+      <div class="share-card">
+        <label class="field-label" for="email-recipients">Email addresses</label>
+        <textarea
+          id="email-recipients"
+          class="field-textarea"
+          rows="2"
+          autocomplete="email"
+          placeholder="name@company.com"
+          spellcheck="false"
+        ></textarea>
+        <details class="advanced-settings">
+          <summary>Advanced</summary>
+          <div class="field-stack">
+            <label class="field-label field-label--subtle" for="api-token">API token</label>
+            <input type="password" id="api-token" class="field-input" autocomplete="off" placeholder="If required by your admin" />
+          </div>
+        </details>
+        <div class="share-actions">
+          <button type="button" id="btn-email" class="btn btn--primary">Send report</button>
         </div>
-      </details>
-      <div class="email-panel-actions">
-        <button type="button" id="btn-email" class="btn primary">Send report</button>
       </div>
     </section>
 
-    <footer class="foot">
-      <span>WeeklyProductPulse</span>
-      <span class="sep">&middot;</span>
-      <span>IndMoney Customer Voice</span>
+    <footer class="site-footer">
+      <p>WeeklyProductPulse <span class="site-footer__dot">·</span> IndMoney Customer Voice</p>
     </footer>
   </div>
-  <div id="success-popup" class="popup-overlay hidden" role="dialog" aria-modal="true">
+
+  <div id="success-popup" class="popup-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="popup-title">
     <div class="popup-card">
-      <div class="popup-icon">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <div class="popup-icon" aria-hidden="true">
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
       </div>
-      <h3 class="popup-title">Email sent successfully</h3>
+      <h3 id="popup-title" class="popup-title">Email sent</h3>
       <p class="popup-detail" id="popup-detail"></p>
-      <button type="button" class="btn primary popup-dismiss" id="popup-dismiss">Done</button>
+      <button type="button" class="btn btn--primary popup-dismiss" id="popup-dismiss">Done</button>
     </div>
   </div>
-  <script src="/assets/js/app.js?v=7" type="module"></script>
+  <script src="/assets/js/app.js?v=8" type="module"></script>
 </body>
 </html>

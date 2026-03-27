@@ -110,7 +110,7 @@ async function loadReport(isoWeek) {
     const dateRange = formatWeekLabel(data.iso_week);
     $("#meta-week").textContent = dateRange;
     $("#meta-status").textContent = "Report ready";
-    $("#meta-status").className = "meta-badge ready";
+    $("#meta-status").className = "meta-badge meta-badge--ready";
     const article = $("#report");
     article.innerHTML = data.html;
     article.classList.add("prose");
@@ -129,7 +129,7 @@ async function init() {
       setLoadingState(false);
       $("#meta-week").textContent = "—";
       $("#meta-status").textContent = "No reports yet";
-      $("#meta-status").className = "meta-badge empty";
+      $("#meta-status").className = "meta-badge meta-badge--muted";
       $("#report").innerHTML = `
         <div class="empty-state">
           <div class="empty-icon">
