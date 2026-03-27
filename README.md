@@ -53,7 +53,7 @@ See `ARCHITECTURE.md` for full design details.
 ### Vercel (frontend — Next.js)
 
 1. Go to [vercel.com](https://vercel.com) and import your GitHub repo.
-2. Set **Root Directory** to `frontend` (the folder that contains `package.json` and `next.config.ts`). If your repo nests the app deeper, choose the path that ends at that folder (e.g. `WeeklyProductPulse/frontend`).
+2. **Root Directory:** either leave the repo root (recommended: a root `vercel.json` already runs `npm ci` / `npm run build` inside `frontend/` and sets `framework` to **nextjs** so Vercel does not try to deploy Python/FastAPI), **or** set **Root Directory** to `frontend` and clear custom build/output overrides so Vercel auto-detects Next.js there. If you see **“No fastapi entrypoint found”**, the project was building from the repo root without picking Next — pull the latest `vercel.json` or set Root Directory to `frontend`.
 3. Framework Preset: **Next.js** (auto-detected). Build command: `npm run build`, output: Next default.
 4. In Vercel → **Settings → Environment Variables**, set **`PULSE_API_UPSTREAM`** to your backend origin **without** a trailing slash (e.g. `https://weeklyproductpulse.onrender.com`). This value is baked into rewrites at build time. The default in `next.config.ts` matches Render if you omit it.
 5. Optionally set the same URL locally in `frontend/.env.local` for `next dev`.
