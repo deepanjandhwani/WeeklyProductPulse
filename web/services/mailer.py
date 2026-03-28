@@ -145,14 +145,12 @@ __GREETING_HTML__
 
         for recipient in recs:
             plain_body, html_body = _personalized_content(recipient)
-            ok = send_email_via_mcp(
+            send_email_via_mcp(
                 to_email=recipient,
                 subject=subj,
                 text_body=plain_body,
                 html_body=html_body,
             )
-            if not ok:
-                raise RuntimeError(f"MCP email send failed for recipient: {recipient}")
         return
 
     try:

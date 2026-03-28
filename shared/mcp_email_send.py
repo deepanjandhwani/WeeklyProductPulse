@@ -168,6 +168,11 @@ def send_emails_via_mcp_batch(
             "MCP email batch timed out (large recipient list or slow npx/Gmail). "
             "Try SMTP, or send to fewer addresses at once."
         ) from e
+    except RuntimeError:
+        raise
+    except Exception as e:
+        logger.error("MCP email batch failed", exc_info=True, extra={"phase": "mcp_email_send"})
+        raise RuntimeError(f"MCP email failed: {e}") from e
 
 
 def send_email_via_mcp(
@@ -176,9 +181,11 @@ def send_email_via_mcp(
     subject: str,
     text_body: str,
     html_body: str,
-) -> bool:
+) -> None:
     """
     Send one email via MCP (delegates to :func:`send_emails_via_mcp_batch`).
+
+    Raises ``RuntimeError`` with the underlying reason on failure (surfaced in API 502 detail).
 
     Env config:
     - EMAIL_MCP_COMMAND: default "npx"
@@ -186,16 +193,5 @@ def send_email_via_mcp(
     - EMAIL_MCP_TOOL: optional explicit tool name
     """
     if not to_email.strip():
-        return False
-    try:
-        send_emails_via_mcp_batch([(to_email, subject, text_body, html_body)])
-        return True
-    except RuntimeError as e:
-        logger.error(
-            "MCP email send failed",
-            extra={"phase": "mcp_email_send", "data": {"to": to_email, "detail": str(e)}},
-        )
-        return False
-    except Exception as e:
-        logger.error(f"MCP email send failed: {e}", exc_info=True)
-        return False
+        raise RuntimeError("Empty recipient email for MCP send")
+    send_emails_via_mcp_batch([(to_email, subject, text_body, html_body)])
