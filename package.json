@@ -1,8 +1,14 @@
 {
   "name": "weekly-product-pulse",
   "private": true,
-  "description": "Monorepo: Python pipeline + Next.js dashboard. Vercel deploys only frontend/ via vercel.json.",
+  "description": "Monorepo: Python pipeline + Next.js in frontend/. Root lists Next so Vercel detects the framework when Root Directory is the repo root.",
   "scripts": {
-    "build": "cd frontend && npm ci && npm run build"
+    "build": "cd frontend && npm ci && npm run build",
+    "dev": "cd frontend && npm run dev"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "next": "^16.2.1"
   }
 }

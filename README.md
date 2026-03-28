@@ -55,7 +55,7 @@ See `ARCHITECTURE.md` for full design details.
 
 ### Vercel (frontend — Next.js)
 
-Python dependencies live in **`requirements-app.txt`** (not `requirements.txt`) so Vercel does **not** auto-detect a Python project at the repo root. The repo also has a root **`vercel.json`** that sets `framework` to **nextjs** and runs `npm ci` / `npm run build` inside **`frontend/`**.
+Python dependencies live in **`requirements-app.txt`** (not `requirements.txt`) so Vercel does **not** auto-detect a Python project at the repo root. The root **`package.json`** lists **`next`** (and React) so Vercel’s Next.js detector succeeds when the project Root Directory is the **repository root** (it only reads that file for the version check). The root **`vercel.json`** sets `framework` to **nextjs** and runs `npm ci` / `npm run build` inside **`frontend/`**.
 
 1. Go to [vercel.com/new](https://vercel.com/new) and import your GitHub repo.
 2. **Recommended:** On **Configure Project**, set **Root Directory** to `WeeklyProductPulse/frontend` so only the Next app is the deployment root.
