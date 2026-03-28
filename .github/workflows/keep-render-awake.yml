@@ -12,12 +12,13 @@ jobs:
     steps:
       - name: Ping Render health endpoint
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+          # bash runs with -e + pipefail; curl failures must not fail the job (keepalive is best-effort).
+          STATUS=$(curl -sS -o /dev/null -w "%{http_code}" \
             --max-time 60 \
-            https://weeklyproductpulse.onrender.com/api/health)
+            https://weeklyproductpulse.onrender.com/api/health || echo "000")
           echo "Response status: $STATUS"
           if [ "$STATUS" != "200" ]; then
-            echo "Warning: health check returned $STATUS (Render may still be cold-starting)"
+            echo "::warning::Health check returned $STATUS (cold start, timeout, or transient network — not treated as workflow failure)"
           else
             echo "Render is awake."
           fi

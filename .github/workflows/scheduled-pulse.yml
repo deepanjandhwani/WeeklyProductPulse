@@ -102,8 +102,8 @@ jobs:
           LOG_LEVEL: INFO
           # Optional repo Variable SCHEDULER_SKIP_BACKFILL=1 to skip Phase 1 (needs data/consolidated/<week>_full.csv in workspace)
           SCHEDULER_SKIP_BACKFILL: ${{ vars.SCHEDULER_SKIP_BACKFILL }}
-          # Priority: manual dispatch input > repo variable > default auto
-          SCHEDULER_PHASE1_MODE: ${{ github.event.inputs.phase1_mode || vars.SCHEDULER_PHASE1_MODE || 'auto' }}
+          # Priority: manual dispatch input > repo variable > default (inputs only exist for workflow_dispatch)
+          SCHEDULER_PHASE1_MODE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.phase1_mode || vars.SCHEDULER_PHASE1_MODE || 'auto' }}
         run: python -m scheduler
 
       - name: Commit reports to repo (triggers Render/Vercel redeploy)

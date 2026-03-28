@@ -107,6 +107,8 @@ The workflow:
 - Runs Phases 1–4 every **Sunday 10:00 PM IST (16:30 UTC)**
 - **Commits** generated `*_pulse.md` reports back to the repo (`[skip ci]`) so the next Render deploy includes them
 
+**If Actions show red:** Open the failed run → expand the step. **Missing secrets** fails early in “Verify required Action secrets”. **Pipeline / Phase 4** failures are usually API keys, Google Doc append, or missing data — read the log. **Keep Render awake** (`.github/workflows/keep-render-awake.yml`) is best-effort: transient `curl` errors to Render should not fail the job after the latest workflow fix.
+
 ### Keep Render awake (external ping service — recommended)
 
 GitHub Actions cron is **not reliable** for keepalive on the free tier — runs can be delayed 15–30 minutes, longer than Render's 15-minute sleep window. Use a purpose-built external ping service instead:
