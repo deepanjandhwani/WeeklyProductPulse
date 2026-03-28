@@ -696,7 +696,7 @@ flowchart LR
 ```
 WeeklyProductPulse/
 ├── config.py                    # App ID, API keys, constants
-├── requirements.txt             # Dependencies (incl. FastAPI, uvicorn, markdown, mcp)
+├── requirements-app.txt         # Python deps (renamed from requirements.txt so Vercel does not auto-detect Python)
 ├── .env.example                 # Template for API keys, SMTP, web token, scheduler flags
 ├── .cursor/
 │   ├── mcp.json                 # Cursor: google-docs MCP command (see docs/GOOGLE_DOCS.md)
@@ -1248,4 +1248,4 @@ gantt
 
 ---
 
-*Document updated 2026-03-28 — v2.0: backend on Render (Docker free tier); keepalive clarified — external ping service (cron-job.org / Better Stack) recommended over GitHub Actions cron (too unreliable for <15 min intervals on free tier); GH Actions backup workflow kept; Vercel Root Directory = `WeeklyProductPulse/frontend`; README overhauled. v1.9 added Next.js dashboard. v1.8 covered CI report commits, weekly schedule, and `entrypoint.sh`.*
+*Document updated 2026-03-28 — v2.0: backend on Render; `requirements.txt` renamed to **`requirements-app.txt`** so Vercel does not treat the repo as Python at root; root `vercel.json` pins **Next.js** and builds `frontend/`; keepalive via external ping; Vercel Root Directory `WeeklyProductPulse/frontend` still recommended. v1.9 added Next.js dashboard. v1.8 covered CI report commits, weekly schedule, and `entrypoint.sh`.*

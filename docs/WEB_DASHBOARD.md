@@ -10,7 +10,7 @@
 From the project root (folder with `config.py`):
 
 ```bash
-pip install -r requirements.txt
+pip install -r requirements-app.txt
 uvicorn web.main:app --reload --host 127.0.0.1 --port 8080
 ```
 

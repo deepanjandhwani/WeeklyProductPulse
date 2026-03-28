@@ -15,7 +15,7 @@ See `ARCHITECTURE.md` for full design details.
 | Component | Platform | Role |
 |-----------|----------|------|
 | **Backend API + email** | Render (Docker) | Hosts FastAPI app; serves report JSON and handles email sending |
-| **Frontend dashboard** | Vercel (Next.js in `frontend/`) | Modern UI (Figtree + Newsreader, DOMPurify, ambient hero); proxies `/api/*` to Render |
+| **Frontend dashboard** | Vercel (Next.js in `frontend/`) | Claude-inspired UI (Lora + DM Sans, DOMPurify); proxies `/api/*` to Render |
 | **Scheduled pipeline** | GitHub Actions | Runs Phases 1–4 every Sunday 10:00 PM IST (16:30 UTC); appends report to Google Docs; commits reports back to repo |
 | **Keep-alive ping** | cron-job.org / Better Stack (external) | Pings Render `/api/health` every 5 min to prevent cold-start delays; GitHub Actions workflow kept as backup |
 | **Google Docs** | Google Workspace | Primary output; report appended automatically after each pipeline run |
@@ -55,9 +55,11 @@ See `ARCHITECTURE.md` for full design details.
 
 ### Vercel (frontend — Next.js)
 
+Python dependencies live in **`requirements-app.txt`** (not `requirements.txt`) so Vercel does **not** auto-detect a Python project at the repo root. The repo also has a root **`vercel.json`** that sets `framework` to **nextjs** and runs `npm ci` / `npm run build` inside **`frontend/`**.
+
 1. Go to [vercel.com/new](https://vercel.com/new) and import your GitHub repo.
-2. On the **Configure Project** screen, click **Edit** next to **Root Directory** and set it to `WeeklyProductPulse/frontend`. This is critical — without it Vercel detects Python/FastAPI and fails.
-3. Framework Preset auto-detects as **Next.js**.
+2. **Recommended:** On **Configure Project**, set **Root Directory** to `WeeklyProductPulse/frontend` so only the Next app is the deployment root.
+3. If you leave Root Directory at the repository root, the root `vercel.json` + `requirements-app.txt` rename should still prevent the FastAPI error — then redeploy after pulling latest `main`.
 4. In Vercel → **Settings → Environment Variables**, add:
 
 | Key | Value |
@@ -67,7 +69,7 @@ See `ARCHITECTURE.md` for full design details.
 5. Optionally set the same URL in `frontend/.env.local` for local `next dev`.
 6. Deploy. All `/api/*` calls from the dashboard are proxied to `PULSE_API_UPSTREAM` via `next.config.ts` rewrites.
 
-> **If you see "No fastapi entrypoint found":** Root Directory is not set. Go to Vercel → Settings → General → Root Directory → set to `WeeklyProductPulse/frontend` → Save → Redeploy.
+> **If you still see "No fastapi entrypoint found":** Pull latest `main` (includes `requirements-app.txt` + root `vercel.json`), then **Redeploy**. If it persists, set **Settings → General → Root Directory** to `WeeklyProductPulse/frontend` and clear any **Framework Override** that forces Python.
 
 ### GitHub Actions (scheduled pipeline)
 
@@ -126,7 +128,7 @@ A backup GitHub Actions workflow (`.github/workflows/keep-render-awake.yml`) is 
 cd WeeklyProductPulse/WeeklyProductPulse
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements-app.txt
 cp .env.example .env
 # Fill .env with real values
 ```

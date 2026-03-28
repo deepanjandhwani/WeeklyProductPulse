@@ -22,7 +22,7 @@ Set:
 | `GOOGLE_DOCS_DOCUMENT_ID` | Doc ID from the URL |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | OAuth Desktop client (same as Cursor MCP) |
 
-On the machine that runs the scheduler, run **`npx -y @a-bonus/google-docs-mcp auth` once** so `~/.config/google-docs-mcp/token.json` exists. Install **Node.js** (`npx` on `PATH`) and **`pip install mcp`** (see `requirements.txt`).
+On the machine that runs the scheduler, run **`npx -y @a-bonus/google-docs-mcp auth` once** so `~/.config/google-docs-mcp/token.json` exists. Install **Node.js** (`npx` on `PATH`) and **`pip install mcp`** (see `requirements-app.txt`).
 
 **Default** `GOOGLE_DOCS_APPEND_TRANSPORT=direct` uses the **Google Docs REST API** + **service account** in [`shared/google_docs_client.py`](../shared/google_docs_client.py) — better for headless CI when you do not want OAuth tokens on disk.
 

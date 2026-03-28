@@ -26,7 +26,7 @@ Unlike Vercel/Railway, a Space **is** a Git repository on Hugging Face. It does 
 
 1. On the Space page, open the **⋮** menu (top right) → **Clone repository** (or use the clone URL from the Space files tab).
 2. You get a remote like `https://huggingface.co/spaces/YOUR_USER/YOUR_SPACE_NAME`.
-3. On your machine, from a folder that has your app at the **repo root** (with `Dockerfile` next to `requirements.txt`):
+3. On your machine, from a folder that has your app at the **repo root** (with `Dockerfile` next to `requirements-app.txt`):
 
 ```bash
 cd /path/to/WeeklyProductPulse   # folder that contains Dockerfile, web/, etc.

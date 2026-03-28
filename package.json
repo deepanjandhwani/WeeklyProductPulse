@@ -1,0 +1,8 @@
+{
+  "name": "weekly-product-pulse",
+  "private": true,
+  "description": "Monorepo: Python pipeline + Next.js dashboard. Vercel deploys only frontend/ via vercel.json.",
+  "scripts": {
+    "build": "cd frontend && npm ci && npm run build"
+  }
+}

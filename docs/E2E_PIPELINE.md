@@ -9,7 +9,7 @@ Run **Phase 1 → 2 → 3 → 4** in order. Phase 4 can append to Google Docs vi
 | `.env` | `GROQ_API_KEY`, `GEMINI_API_KEY` |
 | `.env` | For Doc append: `GOOGLE_DOCS_DOCUMENT_ID`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` |
 | `npx` + token | `npx -y @a-bonus/google-docs-mcp auth` → `~/.config/google-docs-mcp/token.json` |
-| Python venv | `pip install -r requirements.txt` (includes `mcp` for Phase 4 append) |
+| Python venv | `pip install -r requirements-app.txt` (includes `mcp` for Phase 4 append) |
 
 Work from the **inner project root** (folder containing `.env`, `config.py`, `phase4_report/`).
 
