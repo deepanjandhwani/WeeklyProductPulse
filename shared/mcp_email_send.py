@@ -19,6 +19,20 @@ from typing import Any
 
 logger = logging.getLogger("weekly_pulse")
 
+
+def _describe_exception(exc: BaseException) -> str:
+    """
+    Human-readable error text. Unwraps ExceptionGroup / TaskGroup so logs and 502 detail
+    show the real failure (e.g. MCP stdio or Gmail tool) instead of only "1 sub-exception".
+    """
+    if isinstance(exc, BaseExceptionGroup):
+        lines = [f"{type(exc).__name__}: {exc}"]
+        for i, sub in enumerate(exc.exceptions, 1):
+            lines.append(f"  [{i}] {_describe_exception(sub)}")
+        return "\n".join(lines)
+    return f"{type(exc).__name__}: {exc}"
+
+
 # Single-message cap (legacy callers).
 MCP_EMAIL_TIMEOUT_SEC = 120
 # Batch: one npx + handshake, then one tool call per recipient — scale with count.
@@ -171,8 +185,14 @@ def send_emails_via_mcp_batch(
     except RuntimeError:
         raise
     except Exception as e:
-        logger.error("MCP email batch failed", exc_info=True, extra={"phase": "mcp_email_send"})
-        raise RuntimeError(f"MCP email failed: {e}") from e
+        detail = _describe_exception(e)
+        logger.error(
+            "MCP email batch failed: %s",
+            detail,
+            exc_info=True,
+            extra={"phase": "mcp_email_send"},
+        )
+        raise RuntimeError(f"MCP email failed: {detail}") from e
 
 
 def send_email_via_mcp(
