@@ -198,6 +198,8 @@ Each environment reads its own source. **They do not share config automatically.
 
 **Latency:** Gmail MCP runs `npx` and a subprocess; that is slower than plain SMTP. By default the server sends **one recipient per MCP session** (reliable with common Gmail MCP servers). Set **`EMAIL_MCP_BATCH=1`** only if your MCP server supports multiple sends in one session (faster, but can fail on some servers). For the fastest sends in production, use **`EMAIL_TRANSPORT=smtp`** with a transactional provider (SendGrid, SES, Gmail SMTP) instead of MCP.
 
+**Debugging failed sends:** The API returns **502** with a **detail** string from the MCP layer (tool error, missing creds, `npx` failure, etc.). Check **Render → Logs** for the same message and full traceback.
+
 ## MCP Google Docs Setup
 
 1. Enable **Google Docs API**, **Google Drive API**, and **Google Sheets API** in Google Cloud Console.
