@@ -121,7 +121,6 @@ export function PulseDashboard() {
     kind: "ok" | "error";
   } | null>(null);
   const [recipients, setRecipients] = useState("");
-  const [apiToken, setApiToken] = useState("");
   const [emailSending, setEmailSending] = useState(false);
   const [popup, setPopup] = useState<{
     weekLabel: string;
@@ -264,9 +263,6 @@ export function PulseDashboard() {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
-    if (apiToken.trim()) {
-      headers["X-Pulse-API-Token"] = apiToken.trim();
-    }
 
     const body: { recipients: string[]; iso_week?: string } = { recipients: recs };
     if (selectedWeek) body.iso_week = selectedWeek;
@@ -481,26 +477,6 @@ export function PulseDashboard() {
               value={recipients}
               onChange={(e) => setRecipients(e.target.value)}
             />
-            <details className="advanced-settings">
-              <summary>Advanced</summary>
-              <div className="field-stack">
-                <label
-                  className="field-label field-label--subtle"
-                  htmlFor="api-token"
-                >
-                  API token
-                </label>
-                <input
-                  type="password"
-                  id="api-token"
-                  className="field-input"
-                  autoComplete="off"
-                  placeholder="If required by your admin"
-                  value={apiToken}
-                  onChange={(e) => setApiToken(e.target.value)}
-                />
-              </div>
-            </details>
             <div className="share-actions">
               <button
                 type="button"

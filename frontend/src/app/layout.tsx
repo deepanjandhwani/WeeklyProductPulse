@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
-import { Figtree, Newsreader } from "next/font/google";
+import { Lora, DM_Sans } from "next/font/google";
 import "./globals.css";
 
-const figtree = Figtree({
+const dmSans = DM_Sans({
   variable: "--font-sans",
   subsets: ["latin"],
   display: "swap",
+  axes: ["opsz"],
 });
 
-const newsreader = Newsreader({
-  variable: "--font-report",
+const lora = Lora({
+  variable: "--font-serif",
   subsets: ["latin"],
   display: "swap",
   style: ["normal", "italic"],
@@ -28,7 +29,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${figtree.variable} ${newsreader.variable} antialiased`}>
+      <body className={`${dmSans.variable} ${lora.variable} antialiased`}>
         {children}
       </body>
     </html>
