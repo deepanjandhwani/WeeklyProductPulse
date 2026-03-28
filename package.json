@@ -7,7 +7,6 @@
   ],
   "scripts": {
     "build": "npm run build -w frontend",
-    "build:vercel": "npm run build -w frontend && node scripts/vercel-copy-next-to-root.cjs",
     "dev": "npm run dev -w frontend"
   },
   "dependencies": {

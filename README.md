@@ -55,34 +55,30 @@ See `ARCHITECTURE.md` for full design details.
 
 ### Vercel (frontend — Next.js)
 
-Python dependencies live in **`requirements-app.txt`** (not `requirements.txt`) so Vercel does **not** auto-detect a Python project at the repo root. The repo uses **npm workspaces**: root **`package.json`** declares `workspaces: ["frontend"]` and lists **`next`**, **`react`**, and **`react-dom`** so Vercel’s “Next.js version” check passes when deploying from the **repository root**. There is a **single** `package-lock.json` at the repo root (no lockfile inside `frontend/`).
+Python dependencies live in **`requirements-app.txt`** (not `requirements.txt`) so Vercel does **not** auto-detect a Python project at the repo root. The repo uses **npm workspaces**: root **`package.json`** declares `workspaces: ["frontend"]` and there is a **single** `package-lock.json` at the repo root.
 
-**Deploy from repo root (default in Vercel):**
-
-- Root **`vercel.json`**: `npm install` then **`npm run build:vercel`** (runs `next build` in `frontend/`, then copies **`frontend/.next` → `.next`** so Vercel’s Next runtime finds the output at the repo root).
-- Root **`.nvmrc`**: Node `20` (matches Vercel).
-
-**Or deploy only the Next app (often simpler):**
+**Deploy with Root Directory `frontend` (required):** Vercel’s Next.js runtime expects **`.next`** next to **`package.json`** for the deployed app. Building from the repo root leaves output in **`frontend/.next`** only; copying it to the repo root **breaks** serverless function paths (e.g. `_global-error` Lambdas). So the Vercel project **Root Directory** must be **`frontend`**.
 
 1. Go to [vercel.com/new](https://vercel.com/new) and import your GitHub repo.
-2. Set **Root Directory** to **`frontend`** (one level — if your repo already opens inside `WeeklyProductPulse`, use **`frontend`** only, not `WeeklyProductPulse/frontend`).
-3. If your GitHub repo has an extra nesting folder (`WeeklyProductPulse/frontend`), use that full path instead.
-4. In Vercel → **Settings → Environment Variables**, add:
+2. **Project → Settings → General → Root Directory** → **`frontend`** (if the repo nests the app, e.g. `WeeklyProductPulse/frontend`, use that full path).
+3. **Build & Development**: leave **Output Directory** empty; **Framework** = **Next.js**. **`frontend/vercel.json`** runs **`cd .. && npm install`** (workspace install from repo root) then **`cd .. && npm run build -w frontend`**.
+4. **Node `20`:** **`frontend/.nvmrc`** (and the repo root **`.nvmrc`**) match Vercel’s default when Root Directory is **`frontend`**.
+5. In Vercel → **Settings → Environment Variables**, add:
 
 | Key | Value |
 |-----|-------|
 | `PULSE_API_UPSTREAM` | `https://weeklyproductpulse.onrender.com` (your Render URL, no trailing slash) |
 
-5. Optionally set the same URL in `frontend/.env.local` for local `next dev`.
-6. Deploy. All `/api/*` calls from the dashboard are proxied to `PULSE_API_UPSTREAM` via `next.config.ts` rewrites.
+6. Optionally set the same URL in `frontend/.env.local` for local `next dev`.
+7. Deploy. All `/api/*` calls from the dashboard are proxied to `PULSE_API_UPSTREAM` via `next.config.ts` rewrites.
 
-> **“No Next.js version detected”:** Vercel is reading the wrong folder’s `package.json`. Pull latest `main`, then either (a) set **Root Directory** to **`frontend`** and redeploy, or (b) leave Root Directory empty (repo root) so the workspace **root** `package.json` (which lists `next`) is used. Do **not** mix a Root Directory of `frontend` with expecting the root lockfile — if you use `frontend`, `frontend/vercel.json` runs `npm install` + `npm run build` there.
+> **“No Next.js version detected”:** Set **Root Directory** to **`frontend`** (see above). **`frontend/package.json`** lists **`next`** so detection works once Vercel reads that folder.
 >
 > **“No fastapi entrypoint found”:** Pull latest `main` (`requirements-app.txt` + Next workspace). Clear any **Framework Override** that forces Python.
 >
-> **`routes-manifest.json` / `web/static`:** The build finished but deployment failed looking for `/web/static/routes-manifest.json`. That means **Output Directory** is still set to **`web/static`** (legacy static UI). For Next.js it must be **empty** — Vercel uses **`frontend/.next`** (or **`.next`** when Root Directory is `frontend`). In **Project → Settings → Build & Development**, clear **Output Directory** (turn off override if needed), keep **Framework Preset** as **Next.js**, then redeploy.
+> **`routes-manifest.json` / `web/static`:** **Output Directory** is set to **`web/static`** (legacy). Clear it in **Project → Settings → Build & Development** (turn off override if needed), keep **Framework Preset** as **Next.js**, then redeploy.
 >
-> **`.next` not found at `/vercel/path0/.next`:** With **Root Directory** at the repo root, `next build` only creates **`frontend/.next`**. The repo’s **`build:vercel`** script copies that folder to **`.next`** at the root. Pull latest `main` and redeploy, **or** set **Root Directory** to **`frontend`** and use the simpler **`frontend/vercel.json`** build (`npm run build` in that folder) so `.next` is already at the project root.
+> **`.next` not found / `_global-error` Lambda / function path errors:** Set **Root Directory** to **`frontend`** (see above). Do **not** copy **`frontend/.next`** to the repo root — that breaks Vercel’s function paths. If you overrode **Build Command** in the dashboard, clear the override so **`frontend/vercel.json`** is used.
 
 ### GitHub Actions (scheduled pipeline)
 
