@@ -356,7 +356,7 @@ export function PulseDashboard() {
               // eslint-disable-next-line @next/next/no-img-element -- optional brand asset may be absent
               <img
                 className="site-nav__logo"
-                src="/assets/images/indmoney-logo.png"
+                src="/assets/images/indmoney-logo.svg"
                 alt=""
                 width={28}
                 height={28}

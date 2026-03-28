@@ -3,7 +3,7 @@
 > **Product**: IndMoney Play Store Review Intelligence  
 > **Author**: Senior AI Product Manager  
 > **Date**: 24 March 2026  
-> **Version**: 2.0
+> **Version**: 2.1
 
 ---
 
@@ -11,7 +11,7 @@
 
 WeeklyProductPulse is an automated pipeline that scrapes recent IndMoney Play Store reviews from a configurable lookback window (default 12 weeks), clusters them into themes, and produces a concise, PII-free weekly intelligence note — complete with user quotes and actionable recommendations. The system uses **free-tier LLM options** (Groq Llama 3.3 70B by default; Gemini optional per phase via config/env) with chunking and caching controls for rate limits.
 
-**Distribution & operations (v1.6+):** Outputs can be pushed to **Google Docs** (REST API with a service account, or **OAuth + MCP** via `@a-bonus/google-docs-mcp` from Python or Cursor). A **FastAPI** app (`web/main.py`) exposes the report and email APIs and can still serve a legacy static tree under `web/static/`. The **primary production dashboard** is a **Next.js** app in `frontend/` (deployed on **Vercel**): App Router, **Figtree** + **Newsreader** typography, DOMPurify-sanitized report HTML, ambient hero treatment, current-ISO-week preference, cache-busting refresh, and email success popup. Next.js `rewrites` proxy `/api/*` to the backend (`PULSE_API_UPSTREAM`, default Render URL). Email uses **SMTP (default)** or **MCP email transport** (`EMAIL_TRANSPORT=mcp`). The backend runs on **Render** (Docker free tier). A dedicated **external ping service** (e.g. **cron-job.org** or **Better Stack**, both free) pings `GET /api/health` every 5 minutes to prevent Render free-tier cold-start delays. GitHub Actions cron (`keep-render-awake.yml`) is kept as a secondary backup but is not reliable enough alone — free-tier runs can be delayed 15–30 min, exceeding Render's 15-min sleep window. **GitHub Actions** also runs the scheduled pipeline; CI validates required secrets and commits generated `*_pulse.md` files to the repo so the next Render deploy bakes reports into the image.
+**Distribution & operations (v1.6+):** Outputs can be pushed to **Google Docs** (REST API with a service account, or **OAuth + MCP** via `@a-bonus/google-docs-mcp` from Python or Cursor). A **FastAPI** app (`web/main.py`) exposes the report and email APIs and can still serve a legacy static tree under `web/static/`. The **primary production dashboard** is a **Next.js** app in `frontend/` (deployed on **Vercel**): App Router, **Lora** + **DM Sans** (Google Fonts), DOMPurify-sanitized report HTML, ambient hero treatment, current-ISO-week preference, cache-busting refresh, email success popup, and brand mark in `frontend/public/assets/images/`. Next.js `rewrites` proxy `/api/*` to the backend (`PULSE_API_UPSTREAM`, default Render URL). **Vercel** must use **Root Directory `frontend`** (not the repo root): `frontend/vercel.json` runs `cd .. && npm install` and `cd .. && npm run build -w frontend` so the workspace lockfile is used and `.next` stays under `frontend/` (copying `.next` to the repo root breaks serverless function paths). Email uses **SMTP (default)** or **MCP email transport** (`EMAIL_TRANSPORT=mcp`). The backend runs on **Render** (Docker free tier). A dedicated **external ping service** (e.g. **cron-job.org** or **Better Stack**, both free) pings `GET /api/health` every 5 minutes to prevent Render free-tier cold-start delays. GitHub Actions cron (`keep-render-awake.yml`) is kept as a secondary backup but is not reliable enough alone — free-tier runs can be delayed 15–30 min, exceeding Render's 15-min sleep window. **GitHub Actions** also runs the scheduled pipeline; CI validates required secrets and commits generated `*_pulse.md` files to the repo so the next Render deploy bakes reports into the image.
 
 ---
 
@@ -1157,7 +1157,7 @@ def retry_with_backoff(max_retries=3, base_delay=2):
 | **Google Docs (MCP)**   | `@a-bonus/google-docs-mcp` via `npx`, `mcp` Python pkg | — | MIT |
 | **Email transport**     | `smtplib` (SMTP) or MCP email server via `mcp` + `npx` | — | — |
 | **Container runtime**   | Docker (`Dockerfile` + `entrypoint.sh` + `.dockerignore`) for Railway deploys | — | — |
-| **Frontend hosting**    | Vercel — **Next.js** app from `frontend/` (Root Directory must be set to `WeeklyProductPulse/frontend`; `next.config.ts` rewrites `/api/*` to `PULSE_API_UPSTREAM`) | — | Free |
+| **Frontend hosting**    | Vercel — **Next.js** app from `frontend/` (**Root Directory** = **`frontend`** relative to the Git repo root; `frontend/vercel.json` + `next.config.ts` rewrites `/api/*` to `PULSE_API_UPSTREAM`) | — | Free |
 | **Backend hosting**     | Render — Docker container (free tier; external ping service prevents cold starts; GH Actions backup workflow in repo) | — | Free |
 | **Config**              | `python-dotenv`           | —       | BSD        |
 | **HTTP client**         | Stdlib + SDK clients used per integration | — | — |
@@ -1248,4 +1248,4 @@ gantt
 
 ---
 
-*Document updated 2026-03-28 — v2.0: backend on Render; `requirements.txt` renamed to **`requirements-app.txt`** so Vercel does not treat the repo as Python at root; root `vercel.json` pins **Next.js** and builds `frontend/`; keepalive via external ping; Vercel Root Directory `WeeklyProductPulse/frontend` still recommended. v1.9 added Next.js dashboard. v1.8 covered CI report commits, weekly schedule, and `entrypoint.sh`.*
+*Document updated 2026-03-28 — v2.1: Vercel production deploy validated — **Root Directory `frontend`** only; config in **`frontend/vercel.json`** (no root `vercel.json`); executive summary typography corrected to **Lora + DM Sans**; static brand asset in **`frontend/public/assets/images/`**. v2.0: backend on Render; **`requirements-app.txt`** (not `requirements.txt`) so Vercel does not auto-detect Python at repo root; keepalive via external ping. v1.9 added Next.js dashboard. v1.8 covered CI report commits, weekly schedule, and `entrypoint.sh`.*

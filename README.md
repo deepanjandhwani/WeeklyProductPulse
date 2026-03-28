@@ -15,7 +15,7 @@ See `ARCHITECTURE.md` for full design details.
 | Component | Platform | Role |
 |-----------|----------|------|
 | **Backend API + email** | Render (Docker) | Hosts FastAPI app; serves report JSON and handles email sending |
-| **Frontend dashboard** | Vercel (Next.js in `frontend/`) | Claude-inspired UI (Lora + DM Sans, DOMPurify); proxies `/api/*` to Render |
+| **Frontend dashboard** | Vercel (Next.js in `frontend/`) | Lora + DM Sans, DOMPurify, nav brand asset in `frontend/public/`; proxies `/api/*` to Render |
 | **Scheduled pipeline** | GitHub Actions | Runs Phases 1–4 every Sunday 10:00 PM IST (16:30 UTC); appends report to Google Docs; commits reports back to repo |
 | **Keep-alive ping** | cron-job.org / Better Stack (external) | Pings Render `/api/health` every 5 min to prevent cold-start delays; GitHub Actions workflow kept as backup |
 | **Google Docs** | Google Workspace | Primary output; report appended automatically after each pipeline run |
@@ -26,7 +26,7 @@ See `ARCHITECTURE.md` for full design details.
 ### Render (backend)
 
 1. Create a new **Web Service** on [render.com](https://render.com), connect your GitHub repo.
-2. Set **Root Directory** to `WeeklyProductPulse`.
+2. Set **Root Directory** to the folder that contains the **`Dockerfile`** at the top of that tree (for this repo, that is usually **empty** / repository root — not a subfolder like `WeeklyProductPulse`, unless your Git remote wraps the project in another directory).
 3. Render detects the `Dockerfile` and builds automatically.
 4. Add environment variables in Render → Environment:
 
@@ -57,10 +57,10 @@ See `ARCHITECTURE.md` for full design details.
 
 Python dependencies live in **`requirements-app.txt`** (not `requirements.txt`) so Vercel does **not** auto-detect a Python project at the repo root. The repo uses **npm workspaces**: root **`package.json`** declares `workspaces: ["frontend"]` and there is a **single** `package-lock.json` at the repo root.
 
-**Deploy with Root Directory `frontend` (required):** Vercel’s Next.js runtime expects **`.next`** next to **`package.json`** for the deployed app. Building from the repo root leaves output in **`frontend/.next`** only; copying it to the repo root **breaks** serverless function paths (e.g. `_global-error` Lambdas). So the Vercel project **Root Directory** must be **`frontend`**.
+**Deploy with Root Directory `frontend` (required):** Vercel’s Next.js runtime expects **`.next`** next to **`package.json`** for the deployed app. Building from the repo root leaves output in **`frontend/.next`** only; copying it to the repo root **breaks** serverless function paths (e.g. `_global-error` Lambdas). So the Vercel project **Root Directory** must be **`frontend`**. This setup is **production-tested** on the main GitHub repo (`deepanjandhwani/WeeklyProductPulse`: path is exactly **`frontend`**, not `WeeklyProductPulse/frontend`).
 
 1. Go to [vercel.com/new](https://vercel.com/new) and import your GitHub repo.
-2. **Project → Settings → General → Root Directory** → **`frontend`** (if the repo nests the app, e.g. `WeeklyProductPulse/frontend`, use that full path).
+2. **Project → Settings → General → Root Directory** → **`frontend`** (only use a longer path such as `SomeFolder/frontend` if your remote actually nests the app that way).
 3. **Build & Development**: leave **Output Directory** empty; **Framework** = **Next.js**. **`frontend/vercel.json`** runs **`cd .. && npm install`** (workspace install from repo root) then **`cd .. && npm run build -w frontend`**.
 4. **Node `20`:** **`frontend/.nvmrc`** (and the repo root **`.nvmrc`**) match Vercel’s default when Root Directory is **`frontend`**.
 5. In Vercel → **Settings → Environment Variables**, add:
@@ -211,6 +211,7 @@ Each environment reads its own source. **They do not share config automatically.
 
 ## Notes
 
+- **Nav brand:** The dashboard uses **`frontend/public/assets/images/indmoney-logo.svg`** (served as `/assets/images/indmoney-logo.svg`). Replace that file with your official PNG/SVG if you have a licensed asset; the repo ships a small green “IM” monogram so the header slot is never empty.
 - `scripts/run_e2e.sh` uses safe `.env` parsing (handles values with spaces).
 - If Google Docs append is requested but fails, Phase 4 fails by design (mandatory).
 - Email is sent only from the UI (not auto-sent by the pipeline unless `EMAIL_REPORT_AFTER_PIPELINE=true`).
