@@ -196,6 +196,8 @@ Each environment reads its own source. **They do not share config automatically.
 4. OAuth keys file: `~/.gmail-mcp/gcp-oauth.keys.json` (auto-created from `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`).
 5. For Render: add `GMAIL_MCP_CREDENTIALS_JSON` as an environment variable (paste the full JSON from `~/.gmail-mcp/credentials.json`). The `entrypoint.sh` script writes it to disk on container startup.
 
+**Latency:** Gmail MCP runs `npx` and a subprocess; that is slower than plain SMTP. By default the server sends **one recipient per MCP session** (reliable with common Gmail MCP servers). Set **`EMAIL_MCP_BATCH=1`** only if your MCP server supports multiple sends in one session (faster, but can fail on some servers). For the fastest sends in production, use **`EMAIL_TRANSPORT=smtp`** with a transactional provider (SendGrid, SES, Gmail SMTP) instead of MCP.
+
 ## MCP Google Docs Setup
 
 1. Enable **Google Docs API**, **Google Drive API**, and **Google Sheets API** in Google Cloud Console.

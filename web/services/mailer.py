@@ -129,11 +129,25 @@ __GREETING_HTML__
     if transport == "mcp":
         from shared.mcp_email_send import send_email_via_mcp
 
+        # One MCP subprocess per recipient: some Gmail MCP servers do not allow multiple
+        # tool calls in a single stdio session (second send fails). EMAIL_MCP_BATCH=1
+        # opts into one session for all (faster when your server supports it).
+        subj = f"{subject_prefix} — {iso_week}"
+        use_batch = _env_clean("EMAIL_MCP_BATCH").lower() in ("1", "true", "yes")
+        if use_batch and len(recs) > 1:
+            from shared.mcp_email_send import send_emails_via_mcp_batch
+
+            messages = [
+                (r, subj, *_personalized_content(r)) for r in recs
+            ]
+            send_emails_via_mcp_batch(messages)
+            return
+
         for recipient in recs:
             plain_body, html_body = _personalized_content(recipient)
             ok = send_email_via_mcp(
                 to_email=recipient,
-                subject=f"{subject_prefix} — {iso_week}",
+                subject=subj,
                 text_body=plain_body,
                 html_body=html_body,
             )

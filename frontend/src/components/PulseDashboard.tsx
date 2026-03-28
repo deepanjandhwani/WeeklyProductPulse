@@ -268,7 +268,10 @@ export function PulseDashboard() {
     if (selectedWeek) body.iso_week = selectedWeek;
 
     setEmailSending(true);
-    showStatus("Sending report…", "ok");
+    showStatus(
+      "Sending report… (cold API ~30s; Gmail MCP is slower than SMTP and may take a minute per recipient.)",
+      "ok",
+    );
     try {
       const res = await fetch("/api/email/send", {
         method: "POST",
