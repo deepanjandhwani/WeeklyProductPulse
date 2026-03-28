@@ -11,6 +11,7 @@ build/
 
 # ── Node (Next.js at repo root / workspaces) ─────────────────────────────────
 node_modules/
+.next/
 
 # ── Virtual environments ───────────────────────────────────────────────────────
 .venv/

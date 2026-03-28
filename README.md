@@ -59,7 +59,7 @@ Python dependencies live in **`requirements-app.txt`** (not `requirements.txt`) 
 
 **Deploy from repo root (default in Vercel):**
 
-- Root **`vercel.json`**: `npm install` then `npm run build -w frontend`.
+- Root **`vercel.json`**: `npm install` then **`npm run build:vercel`** (runs `next build` in `frontend/`, then copies **`frontend/.next` → `.next`** so Vercel’s Next runtime finds the output at the repo root).
 - Root **`.nvmrc`**: Node `20` (matches Vercel).
 
 **Or deploy only the Next app (often simpler):**
@@ -79,6 +79,10 @@ Python dependencies live in **`requirements-app.txt`** (not `requirements.txt`) 
 > **“No Next.js version detected”:** Vercel is reading the wrong folder’s `package.json`. Pull latest `main`, then either (a) set **Root Directory** to **`frontend`** and redeploy, or (b) leave Root Directory empty (repo root) so the workspace **root** `package.json` (which lists `next`) is used. Do **not** mix a Root Directory of `frontend` with expecting the root lockfile — if you use `frontend`, `frontend/vercel.json` runs `npm install` + `npm run build` there.
 >
 > **“No fastapi entrypoint found”:** Pull latest `main` (`requirements-app.txt` + Next workspace). Clear any **Framework Override** that forces Python.
+>
+> **`routes-manifest.json` / `web/static`:** The build finished but deployment failed looking for `/web/static/routes-manifest.json`. That means **Output Directory** is still set to **`web/static`** (legacy static UI). For Next.js it must be **empty** — Vercel uses **`frontend/.next`** (or **`.next`** when Root Directory is `frontend`). In **Project → Settings → Build & Development**, clear **Output Directory** (turn off override if needed), keep **Framework Preset** as **Next.js**, then redeploy.
+>
+> **`.next` not found at `/vercel/path0/.next`:** With **Root Directory** at the repo root, `next build` only creates **`frontend/.next`**. The repo’s **`build:vercel`** script copies that folder to **`.next`** at the root. Pull latest `main` and redeploy, **or** set **Root Directory** to **`frontend`** and use the simpler **`frontend/vercel.json`** build (`npm run build` in that folder) so `.next` is already at the project root.
 
 ### GitHub Actions (scheduled pipeline)
 
