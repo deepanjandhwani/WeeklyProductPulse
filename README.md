@@ -55,11 +55,18 @@ See `ARCHITECTURE.md` for full design details.
 
 ### Vercel (frontend — Next.js)
 
-Python dependencies live in **`requirements-app.txt`** (not `requirements.txt`) so Vercel does **not** auto-detect a Python project at the repo root. The root **`package.json`** lists **`next`** (and React) so Vercel’s Next.js detector succeeds when the project Root Directory is the **repository root** (it only reads that file for the version check). The root **`vercel.json`** sets `framework` to **nextjs** and runs `npm ci` / `npm run build` inside **`frontend/`**.
+Python dependencies live in **`requirements-app.txt`** (not `requirements.txt`) so Vercel does **not** auto-detect a Python project at the repo root. The repo uses **npm workspaces**: root **`package.json`** declares `workspaces: ["frontend"]` and lists **`next`**, **`react`**, and **`react-dom`** so Vercel’s “Next.js version” check passes when deploying from the **repository root**. There is a **single** `package-lock.json` at the repo root (no lockfile inside `frontend/`).
+
+**Deploy from repo root (default in Vercel):**
+
+- Root **`vercel.json`**: `npm install` then `npm run build -w frontend`.
+- Root **`.nvmrc`**: Node `20` (matches Vercel).
+
+**Or deploy only the Next app (often simpler):**
 
 1. Go to [vercel.com/new](https://vercel.com/new) and import your GitHub repo.
-2. **Recommended:** On **Configure Project**, set **Root Directory** to `WeeklyProductPulse/frontend` so only the Next app is the deployment root.
-3. If you leave Root Directory at the repository root, the root `vercel.json` + `requirements-app.txt` rename should still prevent the FastAPI error — then redeploy after pulling latest `main`.
+2. Set **Root Directory** to **`frontend`** (one level — if your repo already opens inside `WeeklyProductPulse`, use **`frontend`** only, not `WeeklyProductPulse/frontend`).
+3. If your GitHub repo has an extra nesting folder (`WeeklyProductPulse/frontend`), use that full path instead.
 4. In Vercel → **Settings → Environment Variables**, add:
 
 | Key | Value |
@@ -69,7 +76,9 @@ Python dependencies live in **`requirements-app.txt`** (not `requirements.txt`) 
 5. Optionally set the same URL in `frontend/.env.local` for local `next dev`.
 6. Deploy. All `/api/*` calls from the dashboard are proxied to `PULSE_API_UPSTREAM` via `next.config.ts` rewrites.
 
-> **If you still see "No fastapi entrypoint found":** Pull latest `main` (includes `requirements-app.txt` + root `vercel.json`), then **Redeploy**. If it persists, set **Settings → General → Root Directory** to `WeeklyProductPulse/frontend` and clear any **Framework Override** that forces Python.
+> **“No Next.js version detected”:** Vercel is reading the wrong folder’s `package.json`. Pull latest `main`, then either (a) set **Root Directory** to **`frontend`** and redeploy, or (b) leave Root Directory empty (repo root) so the workspace **root** `package.json` (which lists `next`) is used. Do **not** mix a Root Directory of `frontend` with expecting the root lockfile — if you use `frontend`, `frontend/vercel.json` runs `npm install` + `npm run build` there.
+>
+> **“No fastapi entrypoint found”:** Pull latest `main` (`requirements-app.txt` + Next workspace). Clear any **Framework Override** that forces Python.
 
 ### GitHub Actions (scheduled pipeline)
 

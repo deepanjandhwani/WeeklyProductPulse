@@ -9,6 +9,9 @@ dist/
 build/
 *.egg
 
+# ── Node (Next.js at repo root / workspaces) ─────────────────────────────────
+node_modules/
+
 # ── Virtual environments ───────────────────────────────────────────────────────
 .venv/
 venv/

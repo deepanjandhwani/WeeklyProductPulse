@@ -1,14 +1,20 @@
 {
   "name": "weekly-product-pulse",
   "private": true,
-  "description": "Monorepo: Python pipeline + Next.js in frontend/. Root lists Next so Vercel detects the framework when Root Directory is the repo root.",
+  "description": "Monorepo: Python pipeline + Next.js in frontend/. Root lists next so Vercel detects Next.js when deploying from repo root.",
+  "workspaces": [
+    "frontend"
+  ],
   "scripts": {
-    "build": "cd frontend && npm ci && npm run build",
-    "dev": "cd frontend && npm run dev"
+    "build": "npm run build -w frontend",
+    "dev": "npm run dev -w frontend"
   },
   "dependencies": {
+    "next": "^16.2.1",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "next": "^16.2.1"
+    "react-dom": "^19.0.0"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }
