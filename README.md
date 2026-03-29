@@ -19,7 +19,7 @@ See `ARCHITECTURE.md` for full design details.
 | **Scheduled pipeline** | GitHub Actions | Runs Phases 1–4 every Sunday 10:00 PM IST (16:30 UTC); appends report to Google Docs; commits reports back to repo |
 | **Keep-alive ping** | cron-job.org / Better Stack (external) | Pings Render `/api/health` every 5 min to prevent cold-start delays; GitHub Actions workflow kept as backup |
 | **Google Docs** | Google Workspace | Primary output; report appended automatically after each pipeline run |
-| **Email** | Gmail MCP (or SMTP) | Sent only when a user triggers it from the dashboard UI |
+| **Email** | Gmail MCP (or SMTP) | Sent only when a user triggers it from the dashboard UI; **MCP** requires **`GMAIL_MCP_CREDENTIALS_JSON`** on Render (OAuth refresh token; see Render table) |
 
 ## Deployment
 
@@ -44,7 +44,7 @@ See `ARCHITECTURE.md` for full design details.
 | `EMAIL_MCP_ARGS` | `-y @gongrzhe/server-gmail-autoauth-mcp` |
 | `EMAIL_MCP_TOOL` | `send_email` |
 | `PULSE_WEB_API_TOKEN` | Random 32+ char string (protects email + upload API) |
-| `GMAIL_MCP_CREDENTIALS_JSON` | Full JSON from `~/.gmail-mcp/credentials.json` (OAuth refresh token for Gmail MCP) |
+| `GMAIL_MCP_CREDENTIALS_JSON` | **Required** when `EMAIL_TRANSPORT=mcp`: paste the full JSON from `~/.gmail-mcp/credentials.json` (must include a **refresh token**). `entrypoint.sh` writes `/root/.gmail-mcp/credentials.json` on startup. Without this, Gmail MCP returns errors such as *No access, refresh token, API key or refresh handler callback is set*. **Redeploy** after changing this value. |
 | `GOOGLE_DOCS_MCP_TOKEN_JSON` | Full JSON from `~/.config/google-docs-mcp/token.json` |
 | `LOG_LEVEL` | `INFO` |
 
@@ -196,7 +196,7 @@ Each environment reads its own source. **They do not share config automatically.
 2. Set `EMAIL_TRANSPORT=mcp` and MCP vars (see Render table above).
 3. Run auth once locally: `npx -y @gongrzhe/server-gmail-autoauth-mcp auth`
 4. OAuth keys file: `~/.gmail-mcp/gcp-oauth.keys.json` (auto-created from `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`).
-5. For Render: add `GMAIL_MCP_CREDENTIALS_JSON` as an environment variable (paste the full JSON from `~/.gmail-mcp/credentials.json`). The `entrypoint.sh` script writes it to disk on container startup.
+5. For **Render (production):** set **`GMAIL_MCP_CREDENTIALS_JSON`** to the full contents of `~/.gmail-mcp/credentials.json` after completing Gmail MCP OAuth locally. This is **required** for MCP email; `entrypoint.sh` writes it into the container at startup. Redeploy after updates.
 
 **Latency:** Gmail MCP runs `npx` and a subprocess; that is slower than plain SMTP. By default the server sends **one recipient per MCP session** (reliable with common Gmail MCP servers). Set **`EMAIL_MCP_BATCH=1`** only if your MCP server supports multiple sends in one session (faster, but can fail on some servers). For the fastest sends in production, use **`EMAIL_TRANSPORT=smtp`** with a transactional provider (SendGrid, SES, Gmail SMTP) instead of MCP.
 
